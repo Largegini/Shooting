@@ -27,7 +27,21 @@
 
 int main(void)
 {
+	int StageState = 0;
+
 	ULONGLONG Time = GetTickCount64();
+	DrawTextInfo CPosition[4];
+	for (int i = 0; i < 4; ++i)
+	{
+		srand((GetTickCount() + i * i) * GetTickCount());
+		CPosition[i].TransInfo.Position.x = rand() % 80;
+		CPosition[i].TransInfo.Position.y = rand() % 45;
+	}
+
+	Object* Cursor1 = new Object;
+	Initialize(Cursor1, (char*)"¢¸", 0.0f, 25.0f);
+	Object* Cursor2 = new Object;
+	Initialize(Cursor2, (char*)"¢¸", 50.0f + (float)strlen("¿¹"), 27.0f);
 
 	system("mode con:cols=120 lines=55");
 	HideCursor(false);
@@ -39,7 +53,7 @@ int main(void)
 			Time  = GetTickCount64();
 			system("cls");
 
-			SceneManager(Scene_State);
+			SceneManager(CPosition, Cursor1, Cursor2, Scene_State);
 		}
 	}
 }
