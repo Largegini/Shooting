@@ -32,7 +32,7 @@ struct Object
 	int Power;
 	int HP;
 	int MaxHP;
-
+	
 	Information Info;
 	Transform TransInfo;
 };
@@ -41,4 +41,13 @@ struct  DrawTextInfo
 {
 	Information Info;
 	Transform TransInfo;
+};
+
+struct System
+{
+	int Scene_State = 0;
+	int StageState = 0;
+	int StageNum = 0;
+	int Score = 0;
+	int ClearStage = 0;
 };

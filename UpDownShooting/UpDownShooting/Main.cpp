@@ -27,8 +27,6 @@
 
 int main(void)
 {
-	int StageState = 0;
-
 	ULONGLONG Time = GetTickCount64();
 	DrawTextInfo CPosition[4];
 	for (int i = 0; i < 4; ++i)
@@ -38,6 +36,9 @@ int main(void)
 		CPosition[i].TransInfo.Position.y = rand() % 45;
 	}
 
+	System* SystemInfo = new System;
+	Object* Player = new Object;
+	Initialize(Player, (char*)"бу", 40.0f, 52.0f);
 	Object* Cursor1 = new Object;
 	Initialize(Cursor1, (char*)"в╕", 0.0f, 25.0f);
 	Object* Cursor2 = new Object;
@@ -53,7 +54,7 @@ int main(void)
 			Time  = GetTickCount64();
 			system("cls");
 
-			SceneManager(CPosition, Cursor1, Cursor2, Scene_State);
+			SceneManager(CPosition, Cursor1, Cursor2, Player, SystemInfo);
 		}
 	}
 }
