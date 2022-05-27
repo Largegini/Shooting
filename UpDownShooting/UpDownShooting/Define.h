@@ -5,13 +5,15 @@ const int Scene_Stage = 2;
 const int Scene_Exit = 3;
 const int Scene_End = 4;
 
-void SceneManager(DrawTextInfo* CPosition, Object* MenuCursor, Object* StageCursor, Object* Player, System* System);
+int BulletCount = 0;
+
+void SceneManager(DrawTextInfo* CPosition, Object* MenuCursor, Object* StageCursor, Object* Player, Object* Enemy[], Object* PBullet[], System* System);
 void Logo();
 void Menu(DrawTextInfo* _DrawTextInfo, Object* _Object, System* _System);
-void Stage(Object* StageCursor, Object* Player, System* _System);
+void Stage(Object* StageCursor, Object* Player, Object* Enemy[], Object* PBullet[], System* _System);
 void End();
 
-void PlayStage(Object* Player, System* _System, const int StageNum);
+void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[], System* _System, const int StageNum);
 int ShowPlayStage(Object* Player, System* System);
 
 void SetCursorPosition(const float _x, const float _y);
@@ -22,6 +24,8 @@ void Initialize(Object* _Object, char* _Texture, const float _PosX, const float 
 
 char* SetName();
 float GetMidleWidth(const char* _str);
+Object* CreateBullet(const float _x, const float _y,const int _Power);
+Object* CreateEnemy(const float _x, const float _y);
 
 void DrawTree(const float Width, const float Height, const float _x = 0, const float _y = 0);
 void DrawMountain(const float Width, const float Height, const float _x = 0, const float _y = 0);
@@ -31,7 +35,7 @@ void DrawCircle(const float Width, const float Height, const float _x = 0, const
 void HideCursor(bool _Visible);
 
 //	***	매개변수 관리법 물어보기
-void SceneManager(DrawTextInfo* CPosition, Object* MenuCursor, Object* StageCursor, Object* Player, System* _System)
+void SceneManager(DrawTextInfo* CPosition, Object* MenuCursor, Object* StageCursor, Object* Player, Object* Enemy[], Object* PBullet[], System* _System)
 {
 	switch (_System->Scene_State)
 	{
@@ -43,7 +47,7 @@ void SceneManager(DrawTextInfo* CPosition, Object* MenuCursor, Object* StageCurs
 		Menu(CPosition, MenuCursor, _System);
 		break;
 	case Scene_Stage :
-		Stage(StageCursor, Player, _System);
+		Stage(StageCursor, Player, Enemy, PBullet, _System);
 		break;
 	case Scene_Exit :
 		exit(NULL);
@@ -137,11 +141,10 @@ void Menu(DrawTextInfo* _DrawTextInfo, Object* _Object, System* _System)
 		OnDrawText((char*)"Press Sapce to Select!", Width, Height + 14.0f, 15);
 }
 
-void Stage(Object* StageCursor, Object* Player, System* _System)
+void Stage(Object* StageCursor, Object* Player, Object* Enemy[], Object* PBullet[], System* _System)
 {
 	
 	float Width = 0;
-	int StageNum = 0;
 	if (_System->StageState == 0) //	오프닝 스킵유무 확인
 	{
 		Width = GetMidleWidth((char*)"오프닝을 스킵합니까?");
@@ -178,8 +181,8 @@ void Stage(Object* StageCursor, Object* Player, System* _System)
 	}
 	else if (_System->StageState == 2)	// 스테이지 확인
 	{
-		StageNum = ShowPlayStage(Player, _System);
-		PlayStage(Player, _System, StageNum);
+		ShowPlayStage(Player, _System);
+		PlayStage(Player, Enemy, PBullet, _System, _System->StageNum);
 	}
 }
 
@@ -188,8 +191,9 @@ void End()
 
 }
 
-void PlayStage(Object* Player, System* _System, const int StageNum)
+void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[], System* _System, const int StageNum)
 {
+	
 	float Width = 95.0f - (float)strlen("Score:");
 
 	OnDrawText((char*)"Stage  ", Width, 3.0f);
@@ -198,22 +202,62 @@ void PlayStage(Object* Player, System* _System, const int StageNum)
 	OnDrawText((char*)"Score: ", Width, 5.0f);
 	OnDrawText(++_System->Score, 110.0f, 5.0f);
 
-	OnDrawText((char*)"◆", Width, 15.0f, 14);
-	OnDrawText((char*)": 일반 총알", Width+2.0f, 15.0f);
-	OnDrawText((char*)"플레이어방향으로 날아옵니다.", Width, 16.0f);
+	OnDrawText((char*)"◆", Width, 13.0f, 14);
+	OnDrawText((char*)": 일반 총알", Width+2.0f, 13.0f);
+	OnDrawText((char*)"플레이어방향으로 날아옵니다.", Width, 14.0f);
 
-	OnDrawText((char*)"▣", Width, 17.0f, 14);
-	OnDrawText((char*)": 유도 총알", Width+2.0f, 17.0f);
-	OnDrawText((char*)"2초간 플레이어를 따라옵니다.", Width, 18.0f);
+	OnDrawText((char*)"▣", Width, 16.0f, 14);
+	OnDrawText((char*)": 유도 총알", Width+2.0f, 16.0f);
+	OnDrawText((char*)"2초간 플레이어를 따라옵니다.", Width, 17.0f);
+
+	OnDrawText((char*)"Power Lv.", Width, 50.0f);
+	OnDrawText(Player->Power, Width+(float)strlen("Power Lv."), 50.0f);
+	OnDrawText((char*)"□□□", Width+20, 51.0f, 6);
+	OnDrawText((char*)"□□□□□□", Width+14, 52.0f, 6);
+	OnDrawText((char*)"□□□□□□□□", Width+10, 53.0f, 6);
 
 
 	for(int i = 0; i < 55; ++i)
-		OnDrawText((char*)"l", Width - 5.0f, i);
+		OnDrawText((char*)"l", Width - 5.0f, (float)i);
 
 	UpdateInput(Player);
-
+	
+		
 	OnDrawText(Player->Info.Texture, Player->TransInfo.Position.x,
 		Player->TransInfo.Position.y, 11);
+	for (int i = 0; i < 32; ++i)
+	{
+		OnDrawText(Enemy[i]->Info.Texture, Enemy[i]->TransInfo.Position.x, Enemy[i]->TransInfo.Position.y);
+	}
+	if (GetAsyncKeyState(VK_SPACE))
+	{
+		for (int i = 0; i < 128; ++i)
+		{
+			if (PBullet[i] == nullptr)
+			{
+				PBullet[i] = CreateBullet(Player->TransInfo.Position.x, Player->TransInfo.Position.y,
+					Player->Power);
+				break;
+			}
+		}
+	}
+
+	for (int i = 0; i < 128; ++i)
+	{
+		if (PBullet[i])
+		{
+			PBullet[i]->TransInfo.Position.y -= 1.0f;
+			OnDrawText(PBullet[i]->Info.Texture, PBullet[i]->TransInfo.Position.x,
+				PBullet[i]->TransInfo.Position.y);
+
+			if (PBullet[i]->TransInfo.Position.y <= 0.0f)
+			{
+				delete PBullet[i];
+				PBullet[i] = nullptr;
+			}
+		}
+	}
+
 	if (StageNum == 1)
 	{
 
@@ -312,20 +356,32 @@ void OnDrawText( const int _Value, const float _x, const float _y, const int _Co
 void UpdateInput(Object* _Object)
 {
 	if (GetAsyncKeyState(VK_UP))
-		_Object->TransInfo.Position.y -= 2;
+	{
+		if (_Object->TransInfo.Position.y > 2)
+			_Object->TransInfo.Position.y -= 2;
+	}
 	if (GetAsyncKeyState(VK_DOWN))
-		_Object->TransInfo.Position.y += 1;
+	{
+		if (_Object->TransInfo.Position.y < 54)
+			_Object->TransInfo.Position.y += 1;
+	}
 	if (GetAsyncKeyState(VK_LEFT))
-		_Object->TransInfo.Position.x -= 2;
+	{
+		if (_Object->TransInfo.Position.x > 1)
+			_Object->TransInfo.Position.x -= 2;
+	}
 	if (GetAsyncKeyState(VK_RIGHT))
-		_Object->TransInfo.Position.x += 2;
+	{
+		if (_Object->TransInfo.Position.x < 82)
+			_Object->TransInfo.Position.x += 2;
+	}
 }
 
 void Initialize(Object* _Object, char* _Texture, const float _PosX, const float _PosY, const float _PosZ)
 {
 	_Object->Info.Texture = (_Texture == nullptr) ? SetName() : _Texture;
 
-	_Object->Power = 0;
+	_Object->Power = 1;
 
 	_Object->TransInfo.Position = Vector3 (_PosX, _PosY, _PosZ);
 	_Object->TransInfo.Rotation = Vector3 (0, 0, 0);
@@ -353,6 +409,22 @@ float GetMidleWidth(const char* _str)
 	return Width;
 }
 
+Object* CreateBullet(const float _x, const float _y, const int _Power)
+{
+	Object* _Object = new Object;
+	if(_Power ==1)
+		Initialize(_Object, (char*)"●", (float)_x, (float)_y - 1.0f,11);
+
+	return _Object;
+}
+
+Object* CreateEnemy(const float _x, const float _y)
+{
+	Object* _Object = new Object;
+	Initialize(_Object, (char*)"⊙", (float)_x, (float)_y - 1.0f);
+
+	return _Object;
+}
 void DrawTree(const float Width, const float Height, const float _x, const float _y)
 {
 	OnDrawText((char*)"     @     ", (Width + _x), (Height - _y), 2);

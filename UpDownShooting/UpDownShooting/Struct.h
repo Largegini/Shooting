@@ -50,4 +50,5 @@ struct System
 	int StageNum = 0;
 	int Score = 0;
 	int ClearStage = 0;
+	int EnameyCount = 0;
 };
