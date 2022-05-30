@@ -29,12 +29,15 @@ int main(void)
 {
 	ULONGLONG Time = GetTickCount64();
 	ULONGLONG EnemyTime = GetTickCount64();
+	ULONGLONG EBulletTime = GetTickCount64();
 
 	DrawTextInfo CPosition[4];
+
 	for (int i = 0; i < 4; ++i)
 	{
 		srand((GetTickCount() + i * i) * GetTickCount());
 		CPosition[i].TransInfo.Position.x = rand() % 80;
+
 		CPosition[i].TransInfo.Position.y = rand() % 45;
 	}
 
@@ -55,10 +58,11 @@ int main(void)
 	Initialize(Cursor1, (char*)"¢¸", 0.0f, 25.0f);
 	Object* Cursor2 = new Object;
 	Initialize(Cursor2, (char*)"¢¸", 50.0f + (float)strlen("¿¹"), 27.0f);
-
-
+	
+	Vector3 Direction[128];
 
 	system("mode con:cols=120 lines=55");
+
 	HideCursor(false);
 
 	while (true)
@@ -67,25 +71,24 @@ int main(void)
 		{
 			Time  = GetTickCount64();
 
-			system("cls");
-
-			SceneManager(CPosition, Cursor1, Cursor2, Player, Enemy, PBullet, SystemInfo);
-			
-			if (SystemInfo->StageNum > 1)
+			if (SystemInfo->StageNum > 0)
 			{
-				if (EnemyTime + (rand() % 4001) + 1000< GetTickCount64())
+				if (EnemyTime + 3000 < GetTickCount64())
 				{
 					EnemyTime = GetTickCount64();
-					for (int i = 0; i < 32; ++i)
-					{
-						if (Enemy[i] == nullptr)
-						{
-							srand((GetTickCount() + i * i) * GetTickCount());
-							Enemy[i] = CreateEnemy((float)(rand() % 80), (float)(rand() % 20));
-						}
-					}
+					SystemInfo->EnemyTime = true;
+				}
+
+				if (EBulletTime + 500 < GetTickCount64())
+				{
+					EBulletTime = GetTickCount64();
+					SystemInfo->EBulletTime = true;
 				}
 			}
+			system("cls");
+
+			SceneManager(CPosition, Cursor1, Cursor2, Player,
+				Enemy, PBullet,Direction, SystemInfo);
 		}
 	}
 

@@ -50,5 +50,8 @@ struct System
 	int StageNum = 0;
 	int Score = 0;
 	int ClearStage = 0;
-	int EnameyCount = 0;
+	int RandNum = 0;
+	int EnemyCount = 0;
+	bool EnemyTime = false;
+	bool EBulletTime = false;
 };
