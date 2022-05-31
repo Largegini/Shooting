@@ -45,13 +45,15 @@ struct  DrawTextInfo
 
 struct System
 {
+	int ClearStage = 0;
+	int EnemyCount = 0;
+	int EBHomingTime[128] = { 0 };
+	int RandNum = 0;
 	int Scene_State = 0;
 	int StageState = 0;
 	int StageNum = 0;
 	int Score = 0;
-	int ClearStage = 0;
-	int RandNum = 0;
-	int EnemyCount = 0;
+
 	bool EnemyTime = false;
 	bool EBulletTime = false;
 };

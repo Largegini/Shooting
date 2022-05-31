@@ -4,20 +4,22 @@ const int Scene_Menu = 1;
 const int Scene_Stage = 2;
 const int Scene_Exit = 3;
 const int Scene_End = 4;
+const int Scene_GameOver = 5;
 
 void SceneManager(DrawTextInfo* CPosition, Object* MenuCursor,
 	Object* StageCursor, Object* Player, Object* Enemy[],
-	Object* PBullet[], Vector3 Direction[], 
+	Object* PBullet[], Object* Item[], Vector3 Direction[],
 	System* System);
 void Logo();
 void Menu(DrawTextInfo* _DrawTextInfo, Object* _Object, System* _System);
 void Stage(Object* StageCursor, Object* Player, Object* Enemy[],
-	Object* PBullet[], Vector3 _Direction[],
+	Object* PBullet[], Object* Item[], Vector3 _Direction[],
 	System* _System);
 void End();
+void GameOver();
 
-void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
-	Vector3 Direction[], System* _System, 
+void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[], 
+	Object* Item[],	Vector3 Direction[], System* _System, 
 	const int StageNum);
 int ShowPlayStage(Object* Player, System* System);
 
@@ -25,7 +27,9 @@ void SetCursorPosition(const float _x, const float _y);
 void OnDrawText(const char* _str, const float _x, const float _y, const int _Color = 15);
 void OnDrawText(const int _Value, const float _x, const float _y, const int _Color = 15);
 void UpdateInput(Object* _Object);
-void Initialize(Object* _Object, char* _Texture, const float _PosX, const float _PosY, const float _PosZ = 0);
+void Initialize(Object* _Object, char* _Texture, const int _MaxHP,
+	const int HP, const float _PosX, const float _PosY,
+	const float _PosZ = 0);
 
 bool Collision(Object* ObjectA, Object* ObjectB);
 char* SetName();
@@ -36,6 +40,7 @@ Vector3 GetDirection(const Object* ObjectA, const Object* ObjectB);
 Object* CreateEnemy(const float _x, const float _y);
 Object* CreateBullet(const float _x, const float _y,const int _Power,
 	const int Option);
+Object* CreateItem(const float _x, const float _y);
 Object* CreateEnemy(const float _x, const float _y);
 
 void DrawTree(const float Width, const float Height, const float _x = 0, const float _y = 0);
@@ -48,7 +53,7 @@ void HideCursor(bool _Visible);
 //	***	매개변수 관리법 물어보기
 void SceneManager(DrawTextInfo* CPosition, Object* MenuCursor,
 	Object* StageCursor, Object* Player, Object* Enemy[],
-	Object* PBullet[], Vector3 Direction[],
+	Object* PBullet[], Object* Item[], Vector3 Direction[],
 	System* _System)
 {
 	switch (_System->Scene_State)
@@ -61,10 +66,13 @@ void SceneManager(DrawTextInfo* CPosition, Object* MenuCursor,
 		Menu(CPosition, MenuCursor, _System);
 		break;
 	case Scene_Stage :
-		Stage(StageCursor, Player, Enemy, PBullet, Direction, _System);
+		Stage(StageCursor, Player, Enemy, PBullet, Item, Direction, _System);
 		break;
 	case Scene_Exit :
 		exit(NULL);
+		break;
+	case Scene_GameOver:
+		GameOver();
 		break;
 	}
 }
@@ -156,9 +164,9 @@ void Menu(DrawTextInfo* _DrawTextInfo, Object* _Object, System* _System)
 }
 
 void Stage(Object* StageCursor, Object* Player, Object* Enemy[],
-	Object* PBullet[], Vector3 _Direction[], System* _System)
+	Object* PBullet[], Object* Item[], Vector3 _Direction[], 
+	System* _System)
 {
-	
 	float Width = 0;
 	if (_System->StageState == 0) //	오프닝 스킵유무 확인
 	{
@@ -197,7 +205,7 @@ void Stage(Object* StageCursor, Object* Player, Object* Enemy[],
 	else if (_System->StageState == 2)	// 스테이지 확인
 	{
 		ShowPlayStage(Player, _System);
-		PlayStage(Player, Enemy, PBullet, _Direction, _System, 
+		PlayStage(Player, Enemy, PBullet, Item, _Direction, _System, 
 			_System->StageNum);
 	}
 }
@@ -207,21 +215,30 @@ void End()
 
 }
 
+void GameOver()
+{
+
+}
+
 void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
-	Vector3 _Direction[], System* _System, 
+	Object* Item[], Vector3 _Direction[], System* _System, 
 	const int StageNum)
 {
 	if (_System->EnemyTime)
 	{
-		for (int i = 0; i < 32; ++i)
+		if (_System->EnemyCount < 32)
 		{
-			if (Enemy[i] == nullptr)
+			for (int i = 0; i < 32; ++i)
 			{
-				srand((GetTickCount() + i * i) * GetTickCount());
-				Enemy[i] = CreateEnemy((float)((rand() % 79+1)),
-					(float)((rand() % 19)+1));
-				_System->EnemyTime = false;
-				break;
+				if (Enemy[i] == nullptr)
+				{
+					srand((GetTickCount() + i * i) * GetTickCount());
+					Enemy[i] = CreateEnemy((float)((rand() % 79 + 1)),
+						(float)((rand() % 19) + 1));
+					_System->EnemyTime = false;
+					_System->EnemyCount++;
+					break;
+				}
 			}
 		}
 	}
@@ -241,7 +258,7 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 					PBullet[i] = CreateBullet(
 						Enemy[_System->RandNum]->TransInfo.Position.x,
 						Enemy[_System->RandNum]->TransInfo.Position.y,
-						0, 1);
+						0, 1+(rand()%2));
 					_Direction[i] = GetDirection(Player, PBullet[i]);
 					_System->EBulletTime = false;
 					break;
@@ -266,9 +283,16 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 
 	OnDrawText((char*)"▣", Width, 16.0f, 14);
 	OnDrawText((char*)": 유도 총알", Width+2.0f, 16.0f);
-	OnDrawText((char*)"2초간 플레이어를 따라옵니다.", Width, 17.0f);
+	OnDrawText((char*)"5초간 플레이어를 따라옵니다.", Width, 17.0f);
 
-	//OnDrawTect((char*)"PlayerHP", Width =)
+	OnDrawText((char*)"PlayerHP", Width, 45.0f);
+	for (int i = 0; i < Player->MaxHP; ++i)
+	{
+		if(i+1<=Player->HP)
+			OnDrawText((char*)"♥", Width+(float)(i*2), 46.0f,11);
+		else
+			OnDrawText((char*)"♡", Width+(float)(i*2), 46.0f,11);
+	}
 	OnDrawText((char*)"Power Lv.", Width, 50.0f);
 	OnDrawText(Player->Power, Width+(float)strlen("Power Lv."), 50.0f);
 	OnDrawText((char*)"□□□", Width+20, 51.0f, 6);
@@ -279,6 +303,25 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 	for(int i = 0; i < 55; ++i)
 		OnDrawText((char*)"l", Width - 5.0f, (float)i);
 
+	for (int i = 0; i < 16; ++i)
+	{
+		if (Item[i])
+		{
+			if (Item[i]->TransInfo.Position.x > 80.0f)
+				Item[i]->TransInfo.Position.x -= 1.0f;
+			else if(Item[i]->TransInfo.Position.x < 1.0f)
+				Item[i]->TransInfo.Position.x += 1.0f;
+
+			if (Item[i]->TransInfo.Position.y > 55.0f)
+				Item[i]->TransInfo.Position.y -= 1.0f;
+			else if (Item[i]->TransInfo.Position.y < 1.0f)
+				Item[i]->TransInfo.Position.y += 1.0f;
+
+			OnDrawText(Item[i]->Info.Texture, 
+				Item[i]->TransInfo.Position.x,
+				Item[i]->TransInfo.Position.y, 10);
+		}
+	}
 	UpdateInput(Player);
 	
 	OnDrawText(Player->Info.Texture, Player->TransInfo.Position.x,
@@ -309,25 +352,47 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 	{
 		if (PBullet[i])
 		{
-			if (PBullet[i]->Info.Option == 1)
+			switch (PBullet[i]->Info.Option)
 			{
-				PBullet[i]->TransInfo.Position.x += _Direction[i].x;
-				PBullet[i]->TransInfo.Position.y += _Direction[i].y;
-				OnDrawText(PBullet[i]->Info.Texture,
-					PBullet[i]->TransInfo.Position.x,
-					PBullet[i]->TransInfo.Position.y,
-					14);
-			}
+				case 0 :
+				{
+					PBullet[i]->TransInfo.Position.y -= 1;
+					OnDrawText(PBullet[i]->Info.Texture,
+						PBullet[i]->TransInfo.Position.x,
+						PBullet[i]->TransInfo.Position.y,
+						11);
+					break;
+				}
 
-		else if (PBullet[i]->Info.Option == 0)
-			{
-				PBullet[i]->TransInfo.Position.y-=1;
-				OnDrawText(PBullet[i]->Info.Texture, 
-					PBullet[i]->TransInfo.Position.x,
-					PBullet[i]->TransInfo.Position.y,
-					11);
-			}
+				case 1:
+				{
+					PBullet[i]->TransInfo.Position.x += _Direction[i].x;
+					PBullet[i]->TransInfo.Position.y += _Direction[i].y;
+					OnDrawText(PBullet[i]->Info.Texture,
+						PBullet[i]->TransInfo.Position.x,
+						PBullet[i]->TransInfo.Position.y,
+						14);
+					break;
+				}
 
+				case 2:
+				{
+					if (_System->EBHomingTime[i] < 50)
+					{
+						_Direction[i] = GetDirection(Player, PBullet[i]);
+						_System->EBHomingTime[i]++;
+					}
+					
+					PBullet[i]->TransInfo.Position.x += _Direction[i].x;
+					PBullet[i]->TransInfo.Position.y += _Direction[i].y;
+
+					OnDrawText(PBullet[i]->Info.Texture,
+						PBullet[i]->TransInfo.Position.x,
+						PBullet[i]->TransInfo.Position.y,
+						14);
+					break;
+				}
+			}
 		}
 	}
 
@@ -342,9 +407,31 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 			{
 				delete PBullet[i];
 				PBullet[i] = nullptr;
+				_System->EBHomingTime[i] = 0;
 				break;
 			}
+		}
+	}
 
+	for (int i = 0; i < 128; ++i)
+	{
+		if (PBullet[i] != nullptr && PBullet[i]->Info.Option > 0)
+		{
+			if (Collision(PBullet[i], Player))
+			{
+				delete PBullet[i];
+				PBullet[i] = nullptr;
+				Player->HP--;
+				_System->EBHomingTime[i] = 0;
+				break;
+			}
+		}
+	}
+
+	for (int i = 0; i < 128; ++i)
+	{
+		if (PBullet[i] != nullptr && PBullet[i]->Info.Option == 0)
+		{
 			for (int j = 0; j < 32; ++j)
 			{
 				if (Enemy[j] != nullptr)
@@ -354,15 +441,29 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 						delete PBullet[i];
 						PBullet[i] = nullptr;
 
+						if (Enemy[j]->Info.Option < 10)
+						{
+							for (int k = 0; k < 16; ++k)
+								Item[k] = CreateItem(Enemy[j]->TransInfo.Position.x,
+									Enemy[j]->TransInfo.Position.y);
+							break;
+						}
+
 						delete Enemy[j];
 						Enemy[j] = nullptr;
+						
+
+						_System->Score += 10;
+
 						break;
 					}
 				}
 			}
-			
 		}
 	}
+	// 게임오버
+	//if (Player->HP <= 0)
+	//	_System->Scene_State = Scene_GameOver;
 }
 
 int ShowPlayStage(Object* Player, System* _System)
@@ -477,11 +578,14 @@ void UpdateInput(Object* _Object)
 	}
 }
 
-void Initialize(Object* _Object, char* _Texture, const float _PosX, const float _PosY, const float _PosZ)
+void Initialize(Object* _Object, char* _Texture, const int _MaxHP,
+	const int _HP,const float _PosX, const float _PosY, const float _PosZ)
 {
 	_Object->Info.Texture = (_Texture == nullptr) ? SetName() : _Texture;
 
 	_Object->Power = 1;
+	_Object->MaxHP = _MaxHP;
+	_Object->HP = _HP;
 
 	_Object->TransInfo.Position = Vector3 (_PosX, _PosY, _PosZ);
 	_Object->TransInfo.Rotation = Vector3 (0, 0, 0);
@@ -491,10 +595,10 @@ void Initialize(Object* _Object, char* _Texture, const float _PosX, const float 
 
 bool Collision(Object* ObjectA, Object* ObjectB)
 {
-	if (ObjectA->TransInfo.Position.y <= ObjectB->TransInfo.Position.y &&
+	if (ObjectA->TransInfo.Position.y  < ObjectB->TransInfo.Position.y + 0.5 &&
+		ObjectA->TransInfo.Position.y  > ObjectB->TransInfo.Position.y - 0.5 &&
 		(ObjectA->TransInfo.Position.x + ObjectA->TransInfo.Scale.x) >=
 		ObjectB->TransInfo.Position.x &&
-		ObjectB->TransInfo.Position.y <= ObjectA->TransInfo.Position.y &&
 		(ObjectB->TransInfo.Position.x + ObjectB->TransInfo.Scale.x) >=
 		ObjectA->TransInfo.Position.x)
 		return true;
@@ -544,25 +648,43 @@ Object* CreateBullet(const float _x, const float _y, const int _Power,
 	Object* _Object = new Object;
 	if (_Power == 1)
 	{
-		Initialize(_Object, (char*)"●", (float)_x, (float)_y, 11);
+		Initialize(_Object, (char*)"●", 0, 0, (float)_x, (float)_y, 11);
 		_Object->Info.Option = 0;
 	}
 
 	if (Option == 1)
 	{
-		Initialize(_Object, (char*)"◆", (float)_x, (float)_y+1.0f, 14);
+		Initialize(_Object, (char*)"◆", 0, 0 ,(float)_x, (float)_y+1.0f,
+			14);
 		_Object->Info.Option = 1;
 	}
+
+	else if (Option == 2)
+	{
+		Initialize(_Object, (char*)"▣", 0, 0, (float)_x, (float)_y + 1.0f,
+			14);
+		_Object->Info.Option = 2;
+	}
+	return _Object;
+}
+
+Object* CreateItem(const float _x, const float _y)
+{
+	Object* _Object = new Object;
+	Initialize(_Object, (char*)"<P>", 0, 0, (float)_x, (float)_y);
 	return _Object;
 }
 
 Object* CreateEnemy(const float _x, const float _y)
 {
 	Object* _Object = new Object;
-	Initialize(_Object, (char*)"⊙", (float)_x, (float)_y);
+	Initialize(_Object, (char*)"⊙", 1 , 1, (float)_x, (float)_y);
+	_Object->Info.Option = rand() % 100;
 
 	return _Object;
 }
+
+
 
 void DrawTree(const float Width, const float Height, const float _x, const float _y)
 {

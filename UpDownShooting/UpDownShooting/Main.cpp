@@ -2,22 +2,33 @@
 // *의 개수는 우선도
 
 // 탑 다운 형식 
+//	*****
+// 스테이지 클리어
+// 레벨 디자인
+// 보스
 // 
-// 플레이어와 적 충돌
-// 적 총알과 플레이어 충돌
-// 적 총알과 플레이어 충돌 후 플레이어 체력 감소
-// 
-// 적 크기, 디자인, 정보
-// 플레이어 디자인
-// 
-//	*****	랜덤한 좌표로 방향을 정해서 날아다니는 적(적 이동)
+//	****	
+// 스테이지 마다 점수저장
+// 랜덤한 좌표로 방향을 정해서 날아다니는 적(적 이동)
 // 한방에 다 죽는 적이 아닌 일정 타수 이상 맞았을 때 죽는 적
+// 적 HP
+// 아이템은 특정적이 떨어뜨린다
 // 나오는 총알 갯 수를 늘려주는 아이템 떠다니기
 // 파워레벨 표시
 // 체력 회복 아이템 떠다니기
-// 위 에서 내려오는 벽
-// 위 아래 뿐만아니라 좌우로도 전환해보기?
 // 차지 공격
+// 
+// ***
+// 마지막 스테이지 클리어시 이름 입력하기
+// 플레이어 디자인
+// 적 크기, 디자인
+// 
+// *
+//  프로그램을 종료하지 않았다면 이름입력후 점수들 순위로 보여주기
+// (종합 점수, 스테이지별 점수)
+// 플레이어와 적 충돌
+// 위 에서 내려오는 벽
+// 폭탄 공격
 
 int main(void)
 {
@@ -38,7 +49,7 @@ int main(void)
 	System* SystemInfo = new System;
 
 	Object* Player = new Object;
-	Initialize(Player, (char*)"▲", 40.0f, 52.0f);
+	Initialize(Player, (char*)"▲", 10, 10, 40.0f, 52.0f);
 
 	Object* Enemy[32];
 	for (int i = 0; i < 32; ++i)
@@ -48,10 +59,15 @@ int main(void)
 	for (int i = 0; i < 128; ++i)
 		PBullet[i] = nullptr;
 
+	Object* Item[16];
+	for (int i = 0; i < 16; ++i)
+		Item[i] = nullptr;
+
 	Object* Cursor1 = new Object;
-	Initialize(Cursor1, (char*)"◀", 0.0f, 25.0f);
+	Initialize(Cursor1, (char*)"◀", 0,0,0.0f, 25.0f);
 	Object* Cursor2 = new Object;
-	Initialize(Cursor2, (char*)"◀", 50.0f + (float)strlen("예"), 27.0f);
+	Initialize(Cursor2, (char*)"◀", 0,0,50.0f + (float)strlen("예"), 
+		27.0f);
 	
 	Vector3 Direction[128];
 
@@ -82,9 +98,8 @@ int main(void)
 			system("cls");
 
 			SceneManager(CPosition, Cursor1, Cursor2, Player,
-				Enemy, PBullet,Direction, SystemInfo);
+				Enemy, PBullet, Item, Direction, SystemInfo);
 		}
 	}
-
 	return 0;
 }
