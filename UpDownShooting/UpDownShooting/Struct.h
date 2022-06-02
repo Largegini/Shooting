@@ -24,6 +24,8 @@ struct Information
 	char* Texture;
 	int Option;
 	int Color;
+	float MoveX = 1.0f;
+	float MoveY = 1.0f;
 };
 
 struct Object
@@ -53,6 +55,7 @@ struct System
 	int StageState = 0;
 	int StageNum = 0;
 	int Score = 0;
+
 
 	bool EnemyTime = false;
 	bool EBulletTime = false;

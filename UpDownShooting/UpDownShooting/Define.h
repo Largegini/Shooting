@@ -8,24 +8,25 @@ const int Scene_GameOver = 5;
 
 void SceneManager(DrawTextInfo* CPosition, Object* MenuCursor,
 	Object* StageCursor, Object* Player, Object* Enemy[],
-	Object* PBullet[], Object* Item[], Vector3 Direction[],
-	System* System);
+	Object* PBullet[], Object* Item[], Vector3* Destination[],
+	Vector3 Direction[], System* _System);
 void Logo();
 void Menu(DrawTextInfo* _DrawTextInfo, Object* _Object, System* _System);
 void Stage(Object* StageCursor, Object* Player, Object* Enemy[],
-	Object* PBullet[], Object* Item[], Vector3 _Direction[],
-	System* _System);
+	Object* PBullet[], Object* Item[], Vector3* Destination[] ,
+	Vector3 _Direction[], System* _System);
 void End();
 void GameOver();
 
-void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[], 
-	Object* Item[],	Vector3 Direction[], System* _System, 
-	const int StageNum);
+void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
+	Object* Item[], Vector3* Destination[], Vector3 _Direction[],
+	System* _System, const int StageNum);
 int ShowPlayStage(Object* Player, System* System);
 
 void SetCursorPosition(const float _x, const float _y);
 void OnDrawText(const char* _str, const float _x, const float _y, const int _Color = 15);
 void OnDrawText(const int _Value, const float _x, const float _y, const int _Color = 15);
+//키입력을 받아오는 함수(방향키)
 void UpdateInput(Object* _Object);
 void Initialize(Object* _Object, char* _Texture, const int _MaxHP,
 	const int HP, const float _PosX, const float _PosY,
@@ -47,14 +48,15 @@ void DrawTree(const float Width, const float Height, const float _x = 0, const f
 void DrawMountain(const float Width, const float Height, const float _x = 0, const float _y = 0);
 void DrawCloud(const float Width, const float Height, const float _x = 0, const float _y = 0);
 void DrawCircle(const float Width, const float Height, const float _x = 0, const float _y= 0);
+void ShowUI(Object* Player, System* _System);
 
 void HideCursor(bool _Visible);
 
 //	***	매개변수 관리법 물어보기
 void SceneManager(DrawTextInfo* CPosition, Object* MenuCursor,
 	Object* StageCursor, Object* Player, Object* Enemy[],
-	Object* PBullet[], Object* Item[], Vector3 Direction[],
-	System* _System)
+	Object* PBullet[], Object* Item[], Vector3* Destination[],
+	Vector3 Direction[], System* _System)
 {
 	switch (_System->Scene_State)
 	{
@@ -66,7 +68,8 @@ void SceneManager(DrawTextInfo* CPosition, Object* MenuCursor,
 		Menu(CPosition, MenuCursor, _System);
 		break;
 	case Scene_Stage :
-		Stage(StageCursor, Player, Enemy, PBullet, Item, Direction, _System);
+		Stage(StageCursor, Player, Enemy, PBullet, Item, Destination,
+			Direction, _System);
 		break;
 	case Scene_Exit :
 		exit(NULL);
@@ -164,8 +167,8 @@ void Menu(DrawTextInfo* _DrawTextInfo, Object* _Object, System* _System)
 }
 
 void Stage(Object* StageCursor, Object* Player, Object* Enemy[],
-	Object* PBullet[], Object* Item[], Vector3 _Direction[], 
-	System* _System)
+	Object* PBullet[], Object* Item[], Vector3* Destination[],
+	Vector3 _Direction[], System* _System)
 {
 	float Width = 0;
 	if (_System->StageState == 0) //	오프닝 스킵유무 확인
@@ -205,7 +208,7 @@ void Stage(Object* StageCursor, Object* Player, Object* Enemy[],
 	else if (_System->StageState == 2)	// 스테이지 확인
 	{
 		ShowPlayStage(Player, _System);
-		PlayStage(Player, Enemy, PBullet, Item, _Direction, _System, 
+		PlayStage(Player, Enemy, PBullet, Item, Destination, _Direction, _System, 
 			_System->StageNum);
 	}
 }
@@ -221,9 +224,10 @@ void GameOver()
 }
 
 void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
-	Object* Item[], Vector3 _Direction[], System* _System, 
+	Object* Item[], Vector3* Destination[], Vector3 _Direction[], System* _System, 
 	const int StageNum)
 {
+	// 일정한 간격으로 적 생성
 	if (_System->EnemyTime)
 	{
 		if (_System->EnemyCount < 32)
@@ -235,6 +239,11 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 					srand((GetTickCount() + i * i) * GetTickCount());
 					Enemy[i] = CreateEnemy((float)((rand() % 79 + 1)),
 						(float)((rand() % 19) + 1));
+					if (Destination[i] == nullptr)
+					{
+						Destination[i]->x = (float)(rand() % 79 + 1);
+						
+					}
 					_System->EnemyTime = false;
 					_System->EnemyCount++;
 					break;
@@ -242,7 +251,7 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 			}
 		}
 	}
-
+	// 일정한 간격으로 랜덤한 적에게서 나오는 총알
 	if (_System->EBulletTime)
 	{
 		srand(GetTickCount() * GetTickCount());
@@ -267,73 +276,44 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 			}
 		}
 	}
-	
-	
-	float Width = 95.0f - (float)strlen("Score:");
-
-	OnDrawText((char*)"Stage  ", Width, 3.0f);
-	OnDrawText(_System->StageNum, 110.0f, 3.0f);
-
-	OnDrawText((char*)"Score: ", Width, 5.0f);
-	OnDrawText(++_System->Score, 110.0f, 5.0f);
-
-	OnDrawText((char*)"◆", Width, 13.0f, 14);
-	OnDrawText((char*)": 일반 총알", Width+2.0f, 13.0f);
-	OnDrawText((char*)"플레이어방향으로 날아옵니다.", Width, 14.0f);
-
-	OnDrawText((char*)"▣", Width, 16.0f, 14);
-	OnDrawText((char*)": 유도 총알", Width+2.0f, 16.0f);
-	OnDrawText((char*)"5초간 플레이어를 따라옵니다.", Width, 17.0f);
-
-	OnDrawText((char*)"PlayerHP", Width, 45.0f);
-	for (int i = 0; i < Player->MaxHP; ++i)
-	{
-		if(i+1<=Player->HP)
-			OnDrawText((char*)"♥", Width+(float)(i*2), 46.0f,11);
-		else
-			OnDrawText((char*)"♡", Width+(float)(i*2), 46.0f,11);
-	}
-	OnDrawText((char*)"Power Lv.", Width, 50.0f);
-	OnDrawText(Player->Power, Width+(float)strlen("Power Lv."), 50.0f);
-	OnDrawText((char*)"□□□", Width+20, 51.0f, 6);
-	OnDrawText((char*)"□□□□□□", Width+14, 52.0f, 6);
-	OnDrawText((char*)"□□□□□□□□", Width+10, 53.0f, 6);
-
-
-	for(int i = 0; i < 55; ++i)
-		OnDrawText((char*)"l", Width - 5.0f, (float)i);
-
+	// 스테이지내 정보 출력
+	ShowUI(Player, _System);
+	//생성된 아이템 출력
 	for (int i = 0; i < 16; ++i)
 	{
 		if (Item[i])
 		{
-			if (Item[i]->TransInfo.Position.x > 80.0f)
-				Item[i]->TransInfo.Position.x -= 1.0f;
-			else if(Item[i]->TransInfo.Position.x < 1.0f)
-				Item[i]->TransInfo.Position.x += 1.0f;
-
-			if (Item[i]->TransInfo.Position.y > 55.0f)
-				Item[i]->TransInfo.Position.y -= 1.0f;
-			else if (Item[i]->TransInfo.Position.y < 1.0f)
-				Item[i]->TransInfo.Position.y += 1.0f;
-
-			OnDrawText(Item[i]->Info.Texture, 
-				Item[i]->TransInfo.Position.x,
-				Item[i]->TransInfo.Position.y, 10);
+			// x축 충돌시 x축반전
+			if ((Item[i]->TransInfo.Position.x + Item[i]->TransInfo.Scale.x) >= 80.0f)
+				Item[i]->Info.MoveX = -1.0f;
+			// x축 충돌시 x축반전
+			if (Item[i]->TransInfo.Position.x <= 1.0f)
+				Item[i]->Info.MoveX = 1.0f;
+			// y축 충돌시 y축반전
+			if (Item[i]->TransInfo.Position.y >= 54.0f)
+				Item[i]->Info.MoveY = -1.0f;
+			// y축 충돌시 y축반전
+			if (Item[i]->TransInfo.Position.y <= 1.0f)
+				Item[i]->Info.MoveY = 1.0f;
+			// 출력
+				OnDrawText(Item[i]->Info.Texture, 
+					Item[i]->TransInfo.Position.x+= Item[i]->Info.MoveX,
+					Item[i]->TransInfo.Position.y+= Item[i]->Info.MoveY,10);
 		}
 	}
+	//플레이어 조작
 	UpdateInput(Player);
-	
+	// 플레이어 출력
 	OnDrawText(Player->Info.Texture, Player->TransInfo.Position.x,
 		Player->TransInfo.Position.y, 11);
-
+	// 적 출력
 	for (int i = 0; i < 32; ++i)
 	{
 		if(Enemy[i])
 			OnDrawText(Enemy[i]->Info.Texture, 
 				Enemy[i]->TransInfo.Position.x, Enemy[i]->TransInfo.Position.y, 2);
 	}
-
+	// 스페이스바를 눌렀을 때 총알 생성
 	if (GetAsyncKeyState(VK_SPACE))
 	{
 		for (int i = 0; i < 128; ++i)
@@ -347,14 +327,14 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 			}
 		}
 	}
-
+	// 총알 출력
 	for (int i = 0; i < 128; ++i)
 	{
 		if (PBullet[i])
 		{
 			switch (PBullet[i]->Info.Option)
 			{
-				case 0 :
+				case 0 :	// 플레이어 총알 출력
 				{
 					PBullet[i]->TransInfo.Position.y -= 1;
 					OnDrawText(PBullet[i]->Info.Texture,
@@ -364,7 +344,7 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 					break;
 				}
 
-				case 1:
+				case 1:	// 적 일반 총알 출력
 				{
 					PBullet[i]->TransInfo.Position.x += _Direction[i].x;
 					PBullet[i]->TransInfo.Position.y += _Direction[i].y;
@@ -375,7 +355,7 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 					break;
 				}
 
-				case 2:
+				case 2: // 적 유도 총알 출력
 				{
 					if (_System->EBHomingTime[i] < 50)
 					{
@@ -395,7 +375,7 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 			}
 		}
 	}
-
+	// 화면 밖으로 나간 총알 삭제
 	for (int i = 0; i < 128; ++i)
 	{
 		if (PBullet[i])
@@ -412,7 +392,8 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 			}
 		}
 	}
-
+	// 적이 쏜 총알 이 플레이어에게 적중했을 때 
+	// 플레이어 체력감소와 적 총알 삭제
 	for (int i = 0; i < 128; ++i)
 	{
 		if (PBullet[i] != nullptr && PBullet[i]->Info.Option > 0)
@@ -427,7 +408,34 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 			}
 		}
 	}
+	// 플레이어의 총알이 적에게 적중 했을 때 확률적으로 아이템 생성
+	for (int i = 0; i < 128; ++i)
+	{
+		if (PBullet[i] != nullptr)
+		{
+			for (int j = 0; j < 32; ++j)
+			{
+				if (Enemy[j] != nullptr)
+				{
 
+					if (Enemy[j]->Info.Option < 10 &&
+						Collision(PBullet[i], Enemy[j]))
+					{
+						for (int k = 0; k < 16; ++k)
+						{
+							if (Item[k] == nullptr)
+								Item[k] = CreateItem(Enemy[j]->TransInfo.Position.x,
+									Enemy[j]->TransInfo.Position.y);
+							break;
+						}
+
+					}
+				}
+			}
+		}
+	
+	}
+	// 플레이어의 총알이 적에게 적중 했을 때 적 삭제와 추가점수 획득
 	for (int i = 0; i < 128; ++i)
 	{
 		if (PBullet[i] != nullptr && PBullet[i]->Info.Option == 0)
@@ -441,14 +449,6 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 						delete PBullet[i];
 						PBullet[i] = nullptr;
 
-						if (Enemy[j]->Info.Option < 10)
-						{
-							for (int k = 0; k < 16; ++k)
-								Item[k] = CreateItem(Enemy[j]->TransInfo.Position.x,
-									Enemy[j]->TransInfo.Position.y);
-							break;
-						}
-
 						delete Enemy[j];
 						Enemy[j] = nullptr;
 						
@@ -461,6 +461,47 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 			}
 		}
 	}
+	//아이템을 먹었을때
+	for (int i = 0; i < 16; ++i)
+	{
+		if (Item[i])
+		{
+			if (Collision(Player, Item[i]))
+			{
+				// 파워업
+				if (Item[i]->Info.Option == 0)
+				{
+					if (Player->Power < 10)
+						Player->Power += 1;
+					else
+						_System->Score += 1000;
+				}
+				//HP회복
+				else if (Item[i]->Info.Option == 1)
+				{
+					if (Player->HP < Player->MaxHP)
+						Player->HP++;
+					else
+						_System->Score += 1000;
+				}
+			}
+		}
+	}
+	// 아이템 먹었을 때 지우기
+	for (int i = 0; i < 16; ++i)
+	{
+		if (Item[i])
+		{
+			if (Collision(Player, Item[i]))
+			{
+				delete Item[i];
+				Item[i] = nullptr;
+				break;
+			}
+		}
+	}
+
+	
 	// 게임오버
 	//if (Player->HP <= 0)
 	//	_System->Scene_State = Scene_GameOver;
@@ -593,6 +634,7 @@ void Initialize(Object* _Object, char* _Texture, const int _MaxHP,
 
 }
 
+
 bool Collision(Object* ObjectA, Object* ObjectB)
 {
 	if (ObjectA->TransInfo.Position.y  < ObjectB->TransInfo.Position.y + 0.5 &&
@@ -646,10 +688,53 @@ Object* CreateBullet(const float _x, const float _y, const int _Power,
 	const int Option)
 {
 	Object* _Object = new Object;
-	if (_Power == 1)
+	switch (_Power)
 	{
+	case 1:
 		Initialize(_Object, (char*)"●", 0, 0, (float)_x, (float)_y, 11);
 		_Object->Info.Option = 0;
+		_Object->Power = 1;
+		break;
+	case 2:
+		Initialize(_Object, (char*)"♠", 0, 0, (float)_x, (float)_y, 11);
+		_Object->Info.Option = 0;
+		_Object->Power = 2;
+		break;
+	case 3:
+		Initialize(_Object, (char*)"★", 0, 0, (float)_x, (float)_y, 11);
+		_Object->Info.Option = 0;
+		_Object->Power = 3;
+		break;
+	case 4:
+		Initialize(_Object, (char*)"●●", 0, 0, (float)_x, (float)_y, 11);
+		_Object->Info.Option = 0;
+		_Object->Power = 4;
+		break;
+	case 5:
+		Initialize(_Object, (char*)"♠♠", 0, 0, (float)_x, (float)_y, 11);
+		_Object->Info.Option = 0;
+		_Object->Power = 6;
+		break;
+	case 6:
+		Initialize(_Object, (char*)"★★", 0, 0, (float)_x, (float)_y, 11);
+		_Object->Info.Option = 0;
+		_Object->Power = 8;
+		break;
+	case 7:
+		Initialize(_Object, (char*)"●●●", 0, 0, (float)_x, (float)_y, 11);
+		_Object->Info.Option = 0;
+		_Object->Power = 9;
+		break;
+	case 8:
+		Initialize(_Object, (char*)"♠♠♠", 0, 0, (float)_x, (float)_y, 11);
+		_Object->Info.Option = 0;
+		_Object->Power = 12;
+		break;
+	case 9:
+		Initialize(_Object, (char*)"★★★", 0, 0, (float)_x, (float)_y, 11);
+		_Object->Info.Option = 0;
+		_Object->Power = 15;
+		break;
 	}
 
 	if (Option == 1)
@@ -668,10 +753,21 @@ Object* CreateBullet(const float _x, const float _y, const int _Power,
 	return _Object;
 }
 
+
 Object* CreateItem(const float _x, const float _y)
 {
 	Object* _Object = new Object;
-	Initialize(_Object, (char*)"<P>", 0, 0, (float)_x, (float)_y);
+	switch (rand() % 2)
+	{
+	case 0 :
+		Initialize(_Object, (char*)"<P>", 0, 0, (float)_x, (float)_y);
+		_Object->Info.Option = 0;
+		break;
+	case 1 :
+		Initialize(_Object, (char*)"[+]", 0, 0, (float)_x, (float)_y);
+		_Object->Info.Option = 1;
+		break;
+	}
 	return _Object;
 }
 
@@ -737,6 +833,94 @@ void DrawCircle(const float Width, const float Height, const float _x, const flo
 	OnDrawText((char*)"@      @", (Width + _x), (Height - _y) + 1.0f, 14);
 	OnDrawText((char*)"@      @", (Width + _x), (Height - _y) + 2.0f, 14);
 	OnDrawText((char*)"  @@@@  ", (Width + _x), (Height - _y) + 3.0f, 14);
+}
+
+void ShowUI(Object* Player, System * _System)
+{
+	float Width = 95.0f - (float)strlen("Score:");
+	
+
+	OnDrawText((char*)"Stage  ", Width, 3.0f);
+	OnDrawText(_System->StageNum, 110.0f, 3.0f);
+
+	OnDrawText((char*)"Score: ", Width, 5.0f);
+	OnDrawText(++_System->Score, 110.0f, 5.0f);
+
+	OnDrawText((char*)"◆", Width, 13.0f, 14);
+	OnDrawText((char*)": 일반 총알", Width + 2.0f, 13.0f);
+	OnDrawText((char*)"플레이어방향으로 날아옵니다.", Width, 14.0f);
+
+	OnDrawText((char*)"▣", Width, 16.0f, 14);
+	OnDrawText((char*)": 유도 총알", Width + 2.0f, 16.0f);
+	OnDrawText((char*)"5초간 플레이어를 따라옵니다.", Width, 17.0f);
+
+	OnDrawText((char*)"PlayerHP", Width, 45.0f);
+	for (int i = 0; i < Player->MaxHP; ++i)
+	{
+		if (i + 1 <= Player->HP)
+			OnDrawText((char*)"♥", Width + (float)(i * 2), 46.0f, 11);
+		else
+			OnDrawText((char*)"♡", Width + (float)(i * 2), 46.0f, 11);
+	}
+
+	for (int i = 0; i < 55; ++i)
+		OnDrawText((char*)"l", Width - 5.0f, (float)i);
+
+	OnDrawText((char*)"Power Lv.", Width, 50.0f);
+	if(Player->Power ==9)
+		OnDrawText((char*) "Max", Width + (float)strlen("Power Lv."), 50.0f);
+	else
+		OnDrawText(Player->Power, Width + (float)strlen("Power Lv."), 50.0f);
+
+	switch (Player->Power)
+	{
+	case 1 :
+		OnDrawText((char*)"□□□", Width + 20, 51.0f, 6);
+		OnDrawText((char*)"□□□□□□", Width + 14, 52.0f, 6);
+		OnDrawText((char*)"□□□□□□□□", Width + 10, 53.0f, 6);
+		break;
+	case 2:
+		OnDrawText((char*)"□□□", Width + 20, 51.0f, 6);
+		OnDrawText((char*)"□□□□□□", Width + 14, 52.0f, 6);
+		OnDrawText((char*)"■□□□□□□□", Width + 10, 53.0f, 6);
+		break;
+	case 3:
+		OnDrawText((char*)"□□□", Width + 20, 51.0f, 6);
+		OnDrawText((char*)"□□□□□□", Width + 14, 52.0f, 6);
+		OnDrawText((char*)"■■□□□□□□", Width + 10, 53.0f, 6);
+		break;
+	case 4:
+		OnDrawText((char*)"□□□", Width + 20, 51.0f, 6);
+		OnDrawText((char*)"■□□□□□", Width + 14, 52.0f, 6);
+		OnDrawText((char*)"■■■□□□□□", Width + 10, 53.0f, 6);
+		break;
+	case 5:
+		OnDrawText((char*)"□□□", Width + 20, 51.0f, 6);
+		OnDrawText((char*)"■■□□□□", Width + 14, 52.0f, 6);
+		OnDrawText((char*)"■■■■□□□□", Width + 10, 53.0f, 6);
+		break;
+	case 6:
+		OnDrawText((char*)"□□□", Width + 20, 51.0f, 6);
+		OnDrawText((char*)"■■■□□□", Width + 14, 52.0f, 6);
+		OnDrawText((char*)"■■■■■□□□", Width + 10, 53.0f, 6);
+		break;
+	case 7:
+		OnDrawText((char*)"■□□", Width + 20, 51.0f, 6);
+		OnDrawText((char*)"■■■■□□", Width + 14, 52.0f, 6);
+		OnDrawText((char*)"■■■■■■□□", Width + 10, 53.0f, 6);
+		break;
+	case 8:
+		OnDrawText((char*)"■■□", Width + 20, 51.0f, 6);
+		OnDrawText((char*)"■■■■■□", Width + 14, 52.0f, 6);
+		OnDrawText((char*)"■■■■■■■□", Width + 10, 53.0f, 6);
+		break;
+	case 9:
+		OnDrawText((char*)"■■■", Width + 20, 51.0f, 6);
+		OnDrawText((char*)"■■■■■■", Width + 14, 52.0f, 6);
+		OnDrawText((char*)"■■■■■■■■", Width + 10, 53.0f, 6);
+		break;
+	}
+	
 }
 
 void HideCursor(bool _Visible)

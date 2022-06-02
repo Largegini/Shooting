@@ -54,7 +54,10 @@ int main(void)
 	Object* Enemy[32];
 	for (int i = 0; i < 32; ++i)
 		Enemy[i] = nullptr;
-	
+	Vector3* Destination[32];
+		for (int i = 0; i < 32; ++i)
+			Destination[i] = nullptr;
+
 	Object* PBullet[128];
 	for (int i = 0; i < 128; ++i)
 		PBullet[i] = nullptr;
@@ -98,7 +101,7 @@ int main(void)
 			system("cls");
 
 			SceneManager(CPosition, Cursor1, Cursor2, Player,
-				Enemy, PBullet, Item, Direction, SystemInfo);
+				Enemy, PBullet, Item, Destination, Direction, SystemInfo);
 		}
 	}
 	return 0;
