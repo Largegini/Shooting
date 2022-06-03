@@ -9,13 +9,8 @@
 // 
 //	****	
 // 스테이지 마다 점수저장
-// 랜덤한 좌표로 방향을 정해서 날아다니는 적(적 이동)
 // 한방에 다 죽는 적이 아닌 일정 타수 이상 맞았을 때 죽는 적
 // 적 HP
-// 아이템은 특정적이 떨어뜨린다
-// 나오는 총알 갯 수를 늘려주는 아이템 떠다니기
-// 파워레벨 표시
-// 체력 회복 아이템 떠다니기
 // 차지 공격
 // 
 // ***
@@ -47,6 +42,8 @@ int main(void)
 	}
 
 	System* SystemInfo = new System;
+	//테스트용
+	SystemInfo->ClearStage = 1;
 
 	Object* Player = new Object;
 	Initialize(Player, (char*)"▲", 10, 10, 40.0f, 52.0f);
@@ -54,7 +51,8 @@ int main(void)
 	Object* Enemy[32];
 	for (int i = 0; i < 32; ++i)
 		Enemy[i] = nullptr;
-	Vector3* Destination[32];
+
+	Object* Destination[32];
 		for (int i = 0; i < 32; ++i)
 			Destination[i] = nullptr;
 
@@ -73,6 +71,7 @@ int main(void)
 		27.0f);
 	
 	Vector3 Direction[128];
+	Vector3 EDirection[32];
 
 	system("mode con:cols=120 lines=55");
 
@@ -101,7 +100,7 @@ int main(void)
 			system("cls");
 
 			SceneManager(CPosition, Cursor1, Cursor2, Player,
-				Enemy, PBullet, Item, Destination, Direction, SystemInfo);
+				Enemy, PBullet, Item, Destination, Direction,EDirection, SystemInfo);
 		}
 	}
 	return 0;

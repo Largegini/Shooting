@@ -8,20 +8,20 @@ const int Scene_GameOver = 5;
 
 void SceneManager(DrawTextInfo* CPosition, Object* MenuCursor,
 	Object* StageCursor, Object* Player, Object* Enemy[],
-	Object* PBullet[], Object* Item[], Vector3* Destination[],
-	Vector3 Direction[], System* _System);
+	Object* PBullet[], Object* Item[], Object* Destination[],
+	Vector3 Direction[], Vector3 EDirection[], System* _System);
 void Logo();
 void Menu(DrawTextInfo* _DrawTextInfo, Object* _Object, System* _System);
 void Stage(Object* StageCursor, Object* Player, Object* Enemy[],
-	Object* PBullet[], Object* Item[], Vector3* Destination[] ,
-	Vector3 _Direction[], System* _System);
+	Object* PBullet[], Object* Item[], Object* Destination[] ,
+	Vector3 _Direction[], Vector3 EDirection[], System* _System);
 void End();
 void GameOver();
 
 void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
-	Object* Item[], Vector3* Destination[], Vector3 _Direction[],
-	System* _System, const int StageNum);
-int ShowPlayStage(Object* Player, System* System);
+	Object* Item[], Object* Destination[], Vector3 _Direction[],
+	Vector3 EDirection[], System* _System);
+void ShowPlayStage(Object* Player, System* System);
 
 void SetCursorPosition(const float _x, const float _y);
 void OnDrawText(const char* _str, const float _x, const float _y, const int _Color = 15);
@@ -43,6 +43,7 @@ Object* CreateBullet(const float _x, const float _y,const int _Power,
 	const int Option);
 Object* CreateItem(const float _x, const float _y);
 Object* CreateEnemy(const float _x, const float _y);
+Object* CreateDestination(const float _x, const float _y);
 
 void DrawTree(const float Width, const float Height, const float _x = 0, const float _y = 0);
 void DrawMountain(const float Width, const float Height, const float _x = 0, const float _y = 0);
@@ -55,8 +56,8 @@ void HideCursor(bool _Visible);
 //	***	매개변수 관리법 물어보기
 void SceneManager(DrawTextInfo* CPosition, Object* MenuCursor,
 	Object* StageCursor, Object* Player, Object* Enemy[],
-	Object* PBullet[], Object* Item[], Vector3* Destination[],
-	Vector3 Direction[], System* _System)
+	Object* PBullet[], Object* Item[], Object* Destination[],
+	Vector3 Direction[], Vector3 EDirection[], System* _System)
 {
 	switch (_System->Scene_State)
 	{
@@ -69,7 +70,7 @@ void SceneManager(DrawTextInfo* CPosition, Object* MenuCursor,
 		break;
 	case Scene_Stage :
 		Stage(StageCursor, Player, Enemy, PBullet, Item, Destination,
-			Direction, _System);
+			Direction, EDirection, _System);
 		break;
 	case Scene_Exit :
 		exit(NULL);
@@ -167,8 +168,8 @@ void Menu(DrawTextInfo* _DrawTextInfo, Object* _Object, System* _System)
 }
 
 void Stage(Object* StageCursor, Object* Player, Object* Enemy[],
-	Object* PBullet[], Object* Item[], Vector3* Destination[],
-	Vector3 _Direction[], System* _System)
+	Object* PBullet[], Object* Item[], Object* Destination[],
+	Vector3 _Direction[], Vector3 EDirection[], System* _System)
 {
 	float Width = 0;
 	if (_System->StageState == 0) //	오프닝 스킵유무 확인
@@ -205,11 +206,12 @@ void Stage(Object* StageCursor, Object* Player, Object* Enemy[],
 			++_System->StageState;
 		}
 	}
-	else if (_System->StageState == 2)	// 스테이지 확인
+	else if (_System->StageState == 2)	// 스테이지 표시, 플레이
 	{
 		ShowPlayStage(Player, _System);
-		PlayStage(Player, Enemy, PBullet, Item, Destination, _Direction, _System, 
-			_System->StageNum);
+		if(_System->StageNum >0)
+			PlayStage(Player, Enemy, PBullet, Item, Destination, _Direction,
+			EDirection, _System);
 	}
 }
 
@@ -224,8 +226,8 @@ void GameOver()
 }
 
 void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
-	Object* Item[], Vector3* Destination[], Vector3 _Direction[], System* _System, 
-	const int StageNum)
+	Object* Item[], Object* Destination[], Vector3 _Direction[],
+	Vector3 EDirection[], System* _System)
 {
 	// 일정한 간격으로 적 생성
 	if (_System->EnemyTime)
@@ -237,13 +239,14 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 				if (Enemy[i] == nullptr)
 				{
 					srand((GetTickCount() + i * i) * GetTickCount());
-					Enemy[i] = CreateEnemy((float)((rand() % 79 + 1)),
-						(float)((rand() % 19) + 1));
-					if (Destination[i] == nullptr)
-					{
-						Destination[i]->x = (float)(rand() % 79 + 1);
-						
-					}
+					Enemy[i] = CreateEnemy((float)(rand() % 79 + 1),
+						(float)(rand() % 19 + 1));
+
+					Destination[i] = CreateDestination(
+						(float)(rand() % 79 + 1),
+						(float)(rand() % 19 + 1));
+					EDirection[i] = GetDirection(Enemy[i], Destination[i]);
+
 					_System->EnemyTime = false;
 					_System->EnemyCount++;
 					break;
@@ -309,9 +312,15 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 	// 적 출력
 	for (int i = 0; i < 32; ++i)
 	{
-		if(Enemy[i])
-			OnDrawText(Enemy[i]->Info.Texture, 
-				Enemy[i]->TransInfo.Position.x, Enemy[i]->TransInfo.Position.y, 2);
+		if (Enemy[i])
+		{
+			
+			Enemy[i]->TransInfo.Position.x += EDirection[i].x;
+			Enemy[i]->TransInfo.Position.y += EDirection[i].y;
+			OnDrawText(Enemy[i]->Info.Texture,
+				Enemy[i]->TransInfo.Position.x , 
+				Enemy[i]->TransInfo.Position.y, 2);
+		}
 	}
 	// 스페이스바를 눌렀을 때 총알 생성
 	if (GetAsyncKeyState(VK_SPACE))
@@ -380,9 +389,9 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 	{
 		if (PBullet[i])
 		{
-			if (PBullet[i]->TransInfo.Position.y < 1.0f ||
-				PBullet[i]->TransInfo.Position.y > 55.0f ||
-				PBullet[i]->TransInfo.Position.x < 1.0f ||
+			if (PBullet[i]->TransInfo.Position.y <= 1.0f ||
+				PBullet[i]->TransInfo.Position.y >= 55.0f ||
+				PBullet[i]->TransInfo.Position.x <= 1.0f ||
 				PBullet[i]->TransInfo.Position.x >= 80.0f)
 			{
 				delete PBullet[i];
@@ -390,6 +399,22 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 				_System->EBHomingTime[i] = 0;
 				break;
 			}
+		}
+	}
+	// 적이 화면 밖으로 나갔을때
+	// 반대편에서 나타나게함
+	for (int i = 0; i < 32; ++i)
+	{
+		if (Enemy[i])
+		{
+			if (Enemy[i]->TransInfo.Position.x <= 1.0f)
+				Enemy[i]->TransInfo.Position.x = 79.0f- Enemy[i]->TransInfo.Scale.x;
+			if(Enemy[i]->TransInfo.Position.x + Enemy[i]->TransInfo.Scale.x >= 80.0f)
+				Enemy[i]->TransInfo.Position.x = 2.0f;
+			if (Enemy[i]->TransInfo.Position.y <= 1.0f)
+				Enemy[i]->TransInfo.Position.y = 53.0f;
+			if (Enemy[i]->TransInfo.Position.y >= 54.0f)
+				Enemy[i]->TransInfo.Position.y = 2.0f;
 		}
 	}
 	// 적이 쏜 총알 이 플레이어에게 적중했을 때 
@@ -452,7 +477,7 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 						delete Enemy[j];
 						Enemy[j] = nullptr;
 						
-
+						_System->PlayerKill--;
 						_System->Score += 10;
 
 						break;
@@ -501,13 +526,17 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 		}
 	}
 
-	
+	if (_System->PlayerKill == 0)
+	{
+		_System->ClearStage++;
+		_System->StageNum = 0;
+	}
 	// 게임오버
 	//if (Player->HP <= 0)
 	//	_System->Scene_State = Scene_GameOver;
 }
 
-int ShowPlayStage(Object* Player, System* _System)
+void ShowPlayStage(Object* Player, System* _System)
 {
 	
 	if (_System->StageNum == 0)
@@ -552,15 +581,35 @@ int ShowPlayStage(Object* Player, System* _System)
 		OnDrawText((char*)" ~           ! ", (Width + 47.0f), (Height - 30.0f) + 4.0f, 14);
 		OnDrawText((char*)"    ~@@@@@#-  ", (Width + 47.0f), (Height - 30.0f) + 5.0f, 14);
 
-		if (_System->ClearStage == 0)
+		switch (_System->ClearStage)
 		{
-			OnDrawText(Player->Info.Texture, Player->TransInfo.Position.x
-				, Player->TransInfo.Position.y, 11);
+		case 0 :
+			OnDrawText(Player->Info.Texture, Player->TransInfo.Position.x - 2.0f
+				, Player->TransInfo.Position.y - 5.0f, 11);
 			Sleep(2500);
 			++_System->StageNum;
+			break;
+		case 1:
+			OnDrawText(Player->Info.Texture, Player->TransInfo.Position.x - 2.0f
+				, Player->TransInfo.Position.y - 5.0f, 11);
+
+			if (Player->TransInfo.Position.x - 2.0f < 68.0f)
+				Player->TransInfo.Position.x += 1.0f;
+			if (Player->TransInfo.Position.y - 5.0f > 36.0f)
+				Player->TransInfo.Position.y -= 1.0f;
+
+			if (Player->TransInfo.Position.x - 2.0f >= 68.0f &&
+				Player->TransInfo.Position.y - 5.0f<= 36.0f)
+			{
+				++_System->StageNum;
+				Player->TransInfo.Position.x = 40.0f;
+				Player->TransInfo.Position.y = 52.0f;
+				break;
+			}
+			
 		}
 	}
-	return _System->StageNum;
+	
 }
 
 void SetCursorPosition(const float _x, const float _y)
@@ -780,6 +829,14 @@ Object* CreateEnemy(const float _x, const float _y)
 	return _Object;
 }
 
+Object* CreateDestination(const float _x, const float _y)
+{
+	Object* _Object = new Object;
+	Initialize(_Object, (char*)"⊙", 1, 1, (float)_x, (float)_y);
+
+	return _Object;
+}
+
 
 
 void DrawTree(const float Width, const float Height, const float _x, const float _y)
@@ -845,6 +902,10 @@ void ShowUI(Object* Player, System * _System)
 
 	OnDrawText((char*)"Score: ", Width, 5.0f);
 	OnDrawText(++_System->Score, 110.0f, 5.0f);
+
+	OnDrawText((char*)"⊙", Width, 7.0f, 2);
+	OnDrawText((char*)" X ", Width+strlen("⊙"), 7.0f);
+	OnDrawText(_System->PlayerKill, Width + strlen("⊙ X "), 7.0f);
 
 	OnDrawText((char*)"◆", Width, 13.0f, 14);
 	OnDrawText((char*)": 일반 총알", Width + 2.0f, 13.0f);
