@@ -16,12 +16,16 @@ void Stage(Object* StageCursor, Object* Player, Object* Enemy[],
 	Object* PBullet[], Object* Item[], Object* Destination[] ,
 	Vector3 _Direction[], Vector3 EDirection[], System* _System);
 void End();
-void GameOver();
+void GameOver(System* _System);
 
 void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 	Object* Item[], Object* Destination[], Vector3 _Direction[],
 	Vector3 EDirection[], System* _System);
 void ShowPlayStage(Object* Player, System* System);
+void StageClear(System* _System);
+void StageSet(Object* Player, Object* Enemy[], Object* PBullet[],
+	Object* Destination[], Vector3 _Direction[], 
+	Vector3 EDirection[], System* _System);
 
 void SetCursorPosition(const float _x, const float _y);
 void OnDrawText(const char* _str, const float _x, const float _y, const int _Color = 15);
@@ -49,6 +53,7 @@ void DrawTree(const float Width, const float Height, const float _x = 0, const f
 void DrawMountain(const float Width, const float Height, const float _x = 0, const float _y = 0);
 void DrawCloud(const float Width, const float Height, const float _x = 0, const float _y = 0);
 void DrawCircle(const float Width, const float Height, const float _x = 0, const float _y= 0);
+void DrawCross(const float Width, const float Height, const float _x, const float _y);
 void ShowUI(Object* Player, System* _System);
 
 void HideCursor(bool _Visible);
@@ -76,7 +81,7 @@ void SceneManager(DrawTextInfo* CPosition, Object* MenuCursor,
 		exit(NULL);
 		break;
 	case Scene_GameOver:
-		GameOver();
+		GameOver(_System);
 		break;
 	}
 }
@@ -220,62 +225,40 @@ void End()
 
 }
 
-void GameOver()
+void GameOver(System* _System)
 {
+	float Width = GetMidleWidth((char*)" _______  _______  __   __  _______    _______  __   __  _______  ______   ");
+	float Height = 20.0f;
 
+	OnDrawText((char*)" _______  _______  __   __  _______    _______  __   __  _______  ______   ", Width, Height, 2);
+	OnDrawText((char*)"|       ||   _   ||  |_|  ||       |  |       ||  | |  ||       ||    _ |  ", Width, Height+1, 2);
+	OnDrawText((char*)"|    ___||  |_|  ||       ||    ___|  |   _   ||  |_|  ||    ___||   | ||  ", Width, Height+2, 2);
+	OnDrawText((char*)"|   | __ |       ||       ||   |___   |  | |  ||       ||   |___ |   |_||_ ", Width, Height+3, 2);
+	OnDrawText((char*)"|   ||  ||       ||       ||    ___|  |  |_|  ||       ||    ___||    __  |", Width, Height+4, 2);
+	OnDrawText((char*)"|   |_| ||   _   || ||_|| ||   |___   |       | |     | |   |___ |   |  | |", Width, Height+5, 2);
+	OnDrawText((char*)"|_______||__| |__||_|   |_||_______|  |_______|  |___|  |_______||___|  |_|", Width, Height+6, 2);
+	Sleep(3000);
+	_System->Scene_State = Scene_Logo;
 }
 
 void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 	Object* Item[], Object* Destination[], Vector3 _Direction[],
 	Vector3 EDirection[], System* _System)
 {
-	// 일정한 간격으로 적 생성
-	if (_System->EnemyTime)
+	StageSet(Player, Enemy, PBullet, Destination, _Direction, EDirection,
+		_System);
+
+	// 스페이스바를 눌렀을 때 총알 생성
+	if (GetAsyncKeyState(VK_SPACE))
 	{
-		if (_System->EnemyCount < 32)
+		for (int i = 0; i < 128; ++i)
 		{
-			for (int i = 0; i < 32; ++i)
+			if (PBullet[i] == nullptr)
 			{
-				if (Enemy[i] == nullptr)
-				{
-					srand((GetTickCount() + i * i) * GetTickCount());
-					Enemy[i] = CreateEnemy((float)(rand() % 79 + 1),
-						(float)(rand() % 19 + 1));
-
-					Destination[i] = CreateDestination(
-						(float)(rand() % 79 + 1),
-						(float)(rand() % 19 + 1));
-					EDirection[i] = GetDirection(Enemy[i], Destination[i]);
-
-					_System->EnemyTime = false;
-					_System->EnemyCount++;
-					break;
-				}
-			}
-		}
-	}
-	// 일정한 간격으로 랜덤한 적에게서 나오는 총알
-	if (_System->EBulletTime)
-	{
-		srand(GetTickCount() * GetTickCount());
-
-		_System->RandNum = rand() % 32;
-
-		if (Enemy[_System->RandNum] != nullptr)
-		{
-			for (int i = 0; i < 128; ++i)
-			{
-				if (PBullet[i] == nullptr)
-				{
-					PBullet[i] = CreateBullet(
-						Enemy[_System->RandNum]->TransInfo.Position.x,
-						Enemy[_System->RandNum]->TransInfo.Position.y,
-						0, 1+(rand()%2));
-					_Direction[i] = GetDirection(Player, PBullet[i]);
-					_System->EBulletTime = false;
-					break;
-				}
-
+				PBullet[i] = CreateBullet(Player->TransInfo.Position.x,
+					Player->TransInfo.Position.y, Player->Power,
+					0);
+				break;
 			}
 		}
 	}
@@ -320,20 +303,6 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 			OnDrawText(Enemy[i]->Info.Texture,
 				Enemy[i]->TransInfo.Position.x , 
 				Enemy[i]->TransInfo.Position.y, 2);
-		}
-	}
-	// 스페이스바를 눌렀을 때 총알 생성
-	if (GetAsyncKeyState(VK_SPACE))
-	{
-		for (int i = 0; i < 128; ++i)
-		{
-			if (PBullet[i] == nullptr)
-			{
-				PBullet[i] = CreateBullet(Player->TransInfo.Position.x, 
-					Player->TransInfo.Position.y, Player->Power, 
-					0);
-				break;
-			}
 		}
 	}
 	// 총알 출력
@@ -525,15 +494,14 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 			}
 		}
 	}
-
+	// 스테이지 클리어
 	if (_System->PlayerKill == 0)
 	{
-		_System->ClearStage++;
-		_System->StageNum = 0;
+		StageClear(_System);
 	}
 	// 게임오버
-	//if (Player->HP <= 0)
-	//	_System->Scene_State = Scene_GameOver;
+	if (Player->HP <= 0)
+		_System->Scene_State = Scene_GameOver;
 }
 
 void ShowPlayStage(Object* Player, System* _System)
@@ -581,36 +549,277 @@ void ShowPlayStage(Object* Player, System* _System)
 		OnDrawText((char*)" ~           ! ", (Width + 47.0f), (Height - 30.0f) + 4.0f, 14);
 		OnDrawText((char*)"    ~@@@@@#-  ", (Width + 47.0f), (Height - 30.0f) + 5.0f, 14);
 
+		if (_System->ClearStage > 0)
+		{
+			DrawCross(Width, Height, 30.0f, -6.0f);
+		}
+		if (_System->ClearStage > 1)
+		{
+			DrawCross(Width, Height, 60.0f, 5.0f);
+		}
+		if (_System->ClearStage > 2)
+		{
+			DrawCross(Width, Height, 40.0f, 13.0f);
+		}
+		if (_System->ClearStage > 3)
+		{
+			DrawCross(Width, Height, 70.0f, 19.0f);
+		}
 		switch (_System->ClearStage)
 		{
-		case 0 :
-			OnDrawText(Player->Info.Texture, Player->TransInfo.Position.x - 2.0f
-				, Player->TransInfo.Position.y - 5.0f, 11);
-			Sleep(2500);
-			++_System->StageNum;
-			break;
-		case 1:
-			OnDrawText(Player->Info.Texture, Player->TransInfo.Position.x - 2.0f
-				, Player->TransInfo.Position.y - 5.0f, 11);
-
-			if (Player->TransInfo.Position.x - 2.0f < 68.0f)
-				Player->TransInfo.Position.x += 1.0f;
-			if (Player->TransInfo.Position.y - 5.0f > 36.0f)
-				Player->TransInfo.Position.y -= 1.0f;
-
-			if (Player->TransInfo.Position.x - 2.0f >= 68.0f &&
-				Player->TransInfo.Position.y - 5.0f<= 36.0f)
+			case 0 :
 			{
-				++_System->StageNum;
-				Player->TransInfo.Position.x = 40.0f;
-				Player->TransInfo.Position.y = 52.0f;
+					OnDrawText(Player->Info.Texture, Player->TransInfo.Position.x - 2.0f
+						, Player->TransInfo.Position.y - 5.0f, 11);
+					Sleep(2500);
+					++_System->StageNum;
+					break;
+			}
+			case 1:
+			{
+				OnDrawText(Player->Info.Texture, Player->TransInfo.Position.x - 2.0f
+					, Player->TransInfo.Position.y - 5.0f, 11);
+
+				if (Player->TransInfo.Position.x - 2.0f < 69.0f)
+					Player->TransInfo.Position.x += 2.0f;
+				if (Player->TransInfo.Position.y - 5.0f > 36.0f)
+					Player->TransInfo.Position.y -= 1.0f;
+
+				if (Player->TransInfo.Position.x - 2.0f >= 69.0f &&
+					Player->TransInfo.Position.y - 5.0f <= 36.0f)
+				{
+					Sleep(1000);
+					++_System->StageNum;
+					Player->TransInfo.Position.x = 40.0f;
+					Player->TransInfo.Position.y = 52.0f;
+				}
 				break;
 			}
-			
+
+			case 2:
+			{
+				OnDrawText(Player->Info.Texture, Player->TransInfo.Position.x + 28.0f
+					, Player->TransInfo.Position.y - 16.0f, 11);
+
+				if (Player->TransInfo.Position.x + 28.0f > 47.0f)
+					Player->TransInfo.Position.x -= 2.0f;
+				if (Player->TransInfo.Position.y - 16.0f > 28.0f)
+					Player->TransInfo.Position.y -= 1.0f;
+
+				if (Player->TransInfo.Position.x + 28.0f <= 47.0f &&
+					Player->TransInfo.Position.y - 16.0f <= 28.0f)
+				{
+					Sleep(1000);
+					++_System->StageNum;
+					Player->TransInfo.Position.x = 40.0f;
+					Player->TransInfo.Position.y = 52.0f;
+				}
+				break;
+			}
+
+			case 3:
+			{	
+				OnDrawText(Player->Info.Texture, Player->TransInfo.Position.x + 8.0f
+				, Player->TransInfo.Position.y - 24.0f, 11);
+
+				if (Player->TransInfo.Position.x + 8.0f < 79.0f)
+					Player->TransInfo.Position.x += 2.0f;
+
+				if (Player->TransInfo.Position.y - 24.0f > 22.0f)
+					Player->TransInfo.Position.y -= 1.0f;
+
+				if (Player->TransInfo.Position.x + 8.0f >= 79.0f &&
+					Player->TransInfo.Position.y - 24.0f <= 22.0f)
+				{
+					Sleep(1000);
+					++_System->StageNum;
+					Player->TransInfo.Position.x = 40.0f;
+					Player->TransInfo.Position.y = 52.0f;
+				}
+				break;
+			}
+
+			case 4:
+			{
+				OnDrawText(Player->Info.Texture, Player->TransInfo.Position.x + 38.0f
+					, Player->TransInfo.Position.y - 30.0f, 11);
+
+				if (Player->TransInfo.Position.x + 38.0f > 59.0f)
+					Player->TransInfo.Position.x -= 2.0f;
+
+				if (Player->TransInfo.Position.y - 30.0f > 12.0f)
+					Player->TransInfo.Position.y -= 1.0f;
+
+				if (Player->TransInfo.Position.x + 38.0f >= 59.0f &&
+					Player->TransInfo.Position.y - 30.0f <= 12.0f)
+				{
+					Sleep(1000);
+					++_System->StageNum;
+					Player->TransInfo.Position.x = 40.0f;
+					Player->TransInfo.Position.y = 52.0f;
+				}
+				break;
+			}
 		}
 	}
-	
 }
+
+void StageClear(System* _System)
+{
+	float Width = GetMidleWidth((char*)" _______  _______  _______  _______  _______    _______  ___      _______  _______  ______    __   __ ");
+	float Height = 20;
+
+	_System->ClearStage++;
+	_System->StageNum = 0;
+
+	switch (_System->ClearStage)
+	{
+	case 1:
+		_System->RScore.Stage1 = _System->Score;
+		_System->RScore.Total += _System->Score;
+		break;
+	case 2:
+		_System->RScore.Stage2 = _System->Score;
+		_System->RScore.Total += _System->Score;
+		break;
+	case 3:
+		_System->RScore.Stage3 = _System->Score;
+		_System->RScore.Total += _System->Score;
+		break;
+	case 4:
+		_System->RScore.Stage4 = _System->Score;
+		_System->RScore.Total += _System->Score;
+		break;
+	case 5:
+		_System->RScore.Stage5 = _System->Score;
+		_System->RScore.Total += _System->Score;
+		break;
+	}
+
+	OnDrawText((char*) " _______  _______  _______  _______  _______    _______  ___      _______  _______  ______    __   __ ", Width, Height, 14);
+	OnDrawText((char*) "|       ||       ||   _   ||       ||       |  |       ||   |    |       ||   _   ||    _ |  |  | |  |", Width, Height+1, 14);
+	OnDrawText((char*) "|  _____||_     _||  |_|  ||    ___||    ___|  |       ||   |    |    ___||  |_|  ||   | ||  |  | |  |", Width, Height+2, 14);
+	OnDrawText((char*) "| |_____   |   |  |       ||   | __ |   |___   |       ||   |    |   |___ |       ||   |_||_ |  | |  |", Width, Height+3, 14);
+	OnDrawText((char*) "|_____  |  |   |  |       ||   ||  ||    ___|  |      _||   |___ |    ___||       ||    __  ||__| |__|", Width, Height+4, 14);
+	OnDrawText((char*) " _____| |  |   |  |   _   ||   |_| ||   |___   |     |_ |       ||   |___ |   _   ||   |  | | __   __ ", Width, Height+5, 14);
+	OnDrawText((char*) "|_______|  |___|  |__| |__||_______||_______|  |_______||_______||_______||__| |__||___|  |_||__| |__|", Width, Height+6, 14);
+	Sleep(2000);
+}
+
+void StageSet(Object* Player, Object* Enemy[], Object* PBullet[], 
+	Object* Destination[], Vector3 _Direction[], Vector3 EDirection[], System* _System)
+{
+	switch (_System->ClearStage)
+	{
+	case 0 :
+
+		if (_System->StageNum == 1)
+		{
+			_System->PlayerKill = 16;
+			_System->StageNum++;
+		}
+	}
+	if (_System->EnemyTime)
+	{
+		if (_System->EnemyCount < 16)
+		{
+			for (int i = 0; i < 32; ++i)
+			{
+				if (Enemy[i] == nullptr)
+				{
+					srand((GetTickCount() + i * i) * GetTickCount());
+					Enemy[i] = CreateEnemy((float)(rand() % 79 + 1),
+						(float)(rand() % 19 + 1));
+
+					Destination[i] = CreateDestination(
+						(float)(rand() % 79 + 1),
+						(float)(rand() % 19 + 1));
+					EDirection[i] = GetDirection(Enemy[i], Destination[i]);
+
+					_System->EnemyTime = false;
+					_System->EnemyCount++;
+					break;
+				}
+			}
+		}
+	}
+	// 일정한 간격으로 랜덤한 적에게서 나오는 총알
+	if (_System->EBulletTime)
+	{
+		srand(GetTickCount() * GetTickCount());
+
+		_System->RandNum = rand() % 32;
+
+		if (Enemy[_System->RandNum] != nullptr)
+		{
+			for (int i = 0; i < 128; ++i)
+			{
+				if (PBullet[i] == nullptr)
+				{
+					PBullet[i] = CreateBullet(
+						Enemy[_System->RandNum]->TransInfo.Position.x,
+						Enemy[_System->RandNum]->TransInfo.Position.y,
+						0, 1 + (rand() % 2));
+					_Direction[i] = GetDirection(Player, PBullet[i]);
+					_System->EBulletTime = false;
+					break;
+				}
+			}
+		}
+	}
+
+	// 일정한 간격으로 적 생성
+	/*if (_System->EnemyTime)
+	{
+		if (_System->EnemyCount < 32)
+		{
+			for (int i = 0; i < 32; ++i)
+			{
+				if (Enemy[i] == nullptr)
+				{
+					srand((GetTickCount() + i * i) * GetTickCount());
+					Enemy[i] = CreateEnemy((float)(rand() % 79 + 1),
+						(float)(rand() % 19 + 1));
+
+					Destination[i] = CreateDestination(
+						(float)(rand() % 79 + 1),
+						(float)(rand() % 19 + 1));
+					EDirection[i] = GetDirection(Enemy[i], Destination[i]);
+
+					_System->EnemyTime = false;
+					_System->EnemyCount++;
+					break;
+				}
+			}
+		}
+	}
+	// 일정한 간격으로 랜덤한 적에게서 나오는 총알
+	if (_System->EBulletTime)
+	{
+		srand(GetTickCount() * GetTickCount());
+
+		_System->RandNum = rand() % 32;
+
+		if (Enemy[_System->RandNum] != nullptr)
+		{
+			for (int i = 0; i < 128; ++i)
+			{
+				if (PBullet[i] == nullptr)
+				{
+					PBullet[i] = CreateBullet(
+						Enemy[_System->RandNum]->TransInfo.Position.x,
+						Enemy[_System->RandNum]->TransInfo.Position.y,
+						0, 1 + (rand() % 2));
+					_Direction[i] = GetDirection(Player, PBullet[i]);
+					_System->EBulletTime = false;
+					break;
+				}
+			}
+		}
+	}
+	*/
+}
+
 
 void SetCursorPosition(const float _x, const float _y)
 {
@@ -886,10 +1095,21 @@ void DrawCloud(const float Width, const float Height, const float _x, const floa
 
 void DrawCircle(const float Width, const float Height, const float _x, const float _y)
 {
-	OnDrawText((char*)"  @@@@    ", (Width + _x), (Height - _y), 14);
+	OnDrawText((char*)"  @@@@  ", (Width + _x), (Height - _y), 14);
 	OnDrawText((char*)"@      @", (Width + _x), (Height - _y) + 1.0f, 14);
 	OnDrawText((char*)"@      @", (Width + _x), (Height - _y) + 2.0f, 14);
 	OnDrawText((char*)"  @@@@  ", (Width + _x), (Height - _y) + 3.0f, 14);
+}
+
+void DrawCross(const float Width, const float Height, const float _x, const float _y)
+{
+	
+OnDrawText((char*)   "_", (Width + _x+3), (Height - _y-1), 12);
+OnDrawText((char*)      "__", (Width + _x+6), (Height - _y-1), 12);
+OnDrawText((char*)  "| |/ /", (Width + _x+2), (Height - _y-1) + 1.0f, 12);
+OnDrawText((char*)  "|   /", (Width + _x+2), (Height - _y-1)+ 2.0f, 12);
+OnDrawText((char*) "/   |", (Width + _x+1), (Height - _y-1) +3.0f, 12);
+OnDrawText((char*)"/_/|_|", (Width + _x), (Height - _y-1) +4.0f,12);
 }
 
 void ShowUI(Object* Player, System * _System)

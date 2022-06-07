@@ -42,8 +42,6 @@ int main(void)
 	}
 
 	System* SystemInfo = new System;
-	//테스트용
-	SystemInfo->ClearStage = 1;
 
 	Object* Player = new Object;
 	Initialize(Player, (char*)"▲", 10, 10, 40.0f, 52.0f);

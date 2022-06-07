@@ -44,6 +44,15 @@ struct  DrawTextInfo
 	Information Info;
 	Transform TransInfo;
 };
+struct RecordScore
+{
+	int Total=0;
+	int Stage1 = 0;
+	int Stage2 = 0;
+	int Stage3 = 0;
+	int Stage4 = 0;
+	int Stage5 = 0;
+};
 
 struct System
 {
@@ -60,4 +69,5 @@ struct System
 
 	bool EnemyTime = false;
 	bool EBulletTime = false;
+	RecordScore RScore;
 };
