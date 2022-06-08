@@ -59,6 +59,7 @@ struct System
 	int ClearStage = 0;
 	int EnemyCount = 0;
 	int EBHomingTime[128] = { 0 };
+	int MaxEnemy = 0;
 	int PlayerKill = 32;
 	int RandNum = 0;
 	int Scene_State = 0;

@@ -15,14 +15,14 @@ void Menu(DrawTextInfo* _DrawTextInfo, Object* _Object, System* _System);
 void Stage(Object* StageCursor, Object* Player, Object* Enemy[],
 	Object* PBullet[], Object* Item[], Object* Destination[] ,
 	Vector3 _Direction[], Vector3 EDirection[], System* _System);
-void End();
-void GameOver(System* _System);
+void End(Object* Player, Object* PBullet[], System* _System);
+void GameOver(Object* Player, Object* PBullet[], System* _System);
 
 void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 	Object* Item[], Object* Destination[], Vector3 _Direction[],
 	Vector3 EDirection[], System* _System);
 void ShowPlayStage(Object* Player, System* System);
-void StageClear(System* _System);
+void StageClear(Object* Player, Object* PBullet[], System* _System);
 void StageSet(Object* Player, Object* Enemy[], Object* PBullet[],
 	Object* Destination[], Vector3 _Direction[], 
 	Vector3 EDirection[], System* _System);
@@ -35,6 +35,7 @@ void UpdateInput(Object* _Object);
 void Initialize(Object* _Object, char* _Texture, const int _MaxHP,
 	const int HP, const float _PosX, const float _PosY,
 	const float _PosZ = 0);
+void ResetSystem(Object* Player, Object* PBullet[], System* _System);
 
 bool Collision(Object* ObjectA, Object* ObjectB);
 char* SetName();
@@ -80,8 +81,11 @@ void SceneManager(DrawTextInfo* CPosition, Object* MenuCursor,
 	case Scene_Exit :
 		exit(NULL);
 		break;
+	case Scene_End:
+		End(Player, PBullet, _System);
+		break;
 	case Scene_GameOver:
-		GameOver(_System);
+		GameOver(Player, PBullet, _System);
 		break;
 	}
 }
@@ -213,6 +217,10 @@ void Stage(Object* StageCursor, Object* Player, Object* Enemy[],
 	}
 	else if (_System->StageState == 2)	// 스테이지 표시, 플레이
 	{
+		if (_System->ClearStage >= 5)
+		{
+			_System->Scene_State = Scene_End;
+		}
 		ShowPlayStage(Player, _System);
 		if(_System->StageNum >0)
 			PlayStage(Player, Enemy, PBullet, Item, Destination, _Direction,
@@ -220,15 +228,118 @@ void Stage(Object* StageCursor, Object* Player, Object* Enemy[],
 	}
 }
 
-void End()
+void End(Object* Player, Object* PBullet[], System* _System)
 {
+	float Width = GetMidleWidth((char*)"    dMMMMMMMMb    dMP   .dMMMb    .dMMMb     dMP   .aMMMb    dMMMMb");
+	float Height = 20.0f;
 
+	_System->StageState = 0;
+
+	OnDrawText((char*)"    dMMMMMMMMb",Width, Height,10);  
+	OnDrawText((char*)"   dMP'dMP'dMP",Width, Height+1,10);            
+	OnDrawText((char*)"  dMP dMP dMP ",Width, Height+2,10);            
+	OnDrawText((char*)" dMP dMP dMP  ",Width, Height+3,10);            
+	OnDrawText((char*)"dMP dMP dMP   ",Width, Height+4,10);
+	
+	OnDrawText((char*)"    dMP",Width+ strlen("    dMMMMMMMMb"), Height,10);
+	OnDrawText((char*)"   amr ",Width+ strlen("    dMMMMMMMMb"), Height+1,10);
+	OnDrawText((char*)"  dMP  ",Width+ strlen("    dMMMMMMMMb"), Height+2,10);
+	OnDrawText((char*)" dMP   ",Width+ strlen("    dMMMMMMMMb"), Height+3,10);
+	OnDrawText((char*)"dMP    ",Width+ strlen("    dMMMMMMMMb"), Height+4,10);
+	
+	OnDrawText((char*)"   .dMMMb ", Width + strlen("    dMMMMMMMMb    dMP"), Height,10);
+	OnDrawText((char*)"  dMP' VP",  Width + strlen("    dMMMMMMMMb    dMP"), Height + 1,10);
+	OnDrawText((char*)"  VMMMb  ",  Width + strlen("    dMMMMMMMMb    dMP"), Height + 2,10);
+	OnDrawText((char*)"dP .dMP ",   Width + strlen("    dMMMMMMMMb    dMP"), Height + 3,10);
+	OnDrawText((char*)"VMMMP' ",   Width  + strlen("    dMMMMMMMMb    dMP"), Height+4, 10);
+	
+	OnDrawText((char*)"   .dMMMb ", Width + strlen("    dMMMMMMMMb    dMP   .dMMMb "), Height, 10);
+	OnDrawText((char*)"  dMP' VP",  Width + strlen("    dMMMMMMMMb    dMP   .dMMMb "), Height + 1, 10);
+	OnDrawText((char*)"  VMMMb  ",  Width + strlen("    dMMMMMMMMb    dMP   .dMMMb "), Height + 2, 10);
+	OnDrawText((char*)"dP .dMP ",   Width + strlen("    dMMMMMMMMb    dMP   .dMMMb "), Height + 3, 10);
+	OnDrawText((char*)"VMMMP' ",    Width + strlen("    dMMMMMMMMb    dMP   .dMMMb "), Height+4, 10);
+	
+	OnDrawText((char*)"    dMP", Width + strlen("    dMMMMMMMMb    dMP   .dMMMb    .dMMMb "), Height, 10);
+	OnDrawText((char*)"   amr ", Width + strlen("    dMMMMMMMMb    dMP   .dMMMb    .dMMMb "), Height + 1,10);
+	OnDrawText((char*)"  dMP  ", Width + strlen("    dMMMMMMMMb    dMP   .dMMMb    .dMMMb "), Height + 2,10);
+	OnDrawText((char*)" dMP   ", Width + strlen("    dMMMMMMMMb    dMP   .dMMMb    .dMMMb "), Height + 3,10);
+	OnDrawText((char*)"dMP    ", Width + strlen("    dMMMMMMMMb    dMP   .dMMMb    .dMMMb "), Height + 4,10);
+	
+	OnDrawText((char*)"   .aMMMb", Width + strlen("    dMMMMMMMMb    dMP   .dMMMb    .dMMMb     dMP"), Height,10);
+	OnDrawText((char*)"  dMP'dMP", Width + strlen("    dMMMMMMMMb    dMP   .dMMMb    .dMMMb     dMP"), Height + 1, 10);
+	OnDrawText((char*)" dMP dMP	", Width + strlen("    dMMMMMMMMb    dMP   .dMMMb    .dMMMb     dMP"), Height + 2, 10);
+	OnDrawText((char*)"dMP.aMP	", Width + strlen("    dMMMMMMMMb    dMP   .dMMMb    .dMMMb     dMP"), Height + 3, 10);
+	OnDrawText((char*)"VMMMP'   ", Width + strlen("    dMMMMMMMMb    dMP   .dMMMb    .dMMMb     dMP"), Height+4, 10);
+	
+	OnDrawText((char*)"    dMMMMb", Width + strlen("    dMMMMMMMMb    dMP   .dMMMb    .dMMMb     dMP   .aMMMb"), Height, 10);
+	OnDrawText((char*)"   dMP dMP", Width + strlen("    dMMMMMMMMb    dMP   .dMMMb    .dMMMb     dMP   .aMMMb"), Height + 1, 10);
+	OnDrawText((char*)"  dMP dMP ", Width + strlen("    dMMMMMMMMb    dMP   .dMMMb    .dMMMb     dMP   .aMMMb"), Height + 2, 10);
+	OnDrawText((char*)" dMP dMP  ", Width + strlen("    dMMMMMMMMb    dMP   .dMMMb    .dMMMb     dMP   .aMMMb"), Height + 3, 10);
+	OnDrawText((char*)"dMP dMP   ", Width + strlen("    dMMMMMMMMb    dMP   .dMMMb    .dMMMb     dMP   .aMMMb"), Height+4, 10);
+	
+	Width = GetMidleWidth((char*)"   .aMMMb   .aMMMb    dMMMMMMMMb    dMMMMb     dMP    dMMMMMP dMMMMMMP    dMMMMMP");
+	Height = 27.0f;
+	OnDrawText((char*)"   .aMMMb", Width, Height, 10);        
+	OnDrawText((char*)"  dMP'VMP", Width, Height + 1, 10);    
+	OnDrawText((char*)" dMP     ", Width, Height + 2, 10);    
+	OnDrawText((char*)"dMP.aMP  ", Width, Height + 3, 10);    
+	OnDrawText((char*)"VMMMP'   ", Width, Height + 4, 10); 
+	
+	OnDrawText((char*)"   .aMMMb", Width, Height, 10);
+	OnDrawText((char*)"  dMP'dMP", Width, Height + 1, 10);
+	OnDrawText((char*)" dMP dMP	", Width, Height + 2, 10);
+	OnDrawText((char*)"dMP.aMP	", Width, Height + 3, 10);
+	OnDrawText((char*)"VMMMP'   ", Width, Height + 4, 10);
+	
+	OnDrawText((char*)"    dMMMMMMMMb", Width, Height,10);
+	OnDrawText((char*)"   dMP'dMP'dMP", Width, Height + 1, 10);
+	OnDrawText((char*)"  dMP dMP dMP ", Width, Height + 2, 10);
+	OnDrawText((char*)" dMP dMP dMP  ", Width, Height + 3, 10);
+	OnDrawText((char*)"dMP dMP dMP   ", Width, Height + 4, 10);
+	                                                                       
+	OnDrawText((char*)"    dMMMMb", Width, Height, 10);
+	OnDrawText((char*)"   dMP.dMP", Width, Height + 1,10);
+	OnDrawText((char*)"  dMMMMP' ", Width, Height + 2,10);
+	OnDrawText((char*)" dMP      ", Width, Height + 3,10);
+	OnDrawText((char*)"dMP       ", Width, Height + 4,10);
+	
+	OnDrawText((char*)"     dMP", Width, Height,10);
+	OnDrawText((char*)"    dMP ", Width, Height + 1,10);
+	OnDrawText((char*)"   dMP  ", Width, Height + 2,10);
+	OnDrawText((char*)"  dMP   ", Width, Height + 3,10);
+	OnDrawText((char*)" dMMMMMP", Width, Height + 4,10);
+	
+	OnDrawText((char*)"    dMMMMMP", Width, Height,10);
+	OnDrawText((char*)"   dMP     ", Width, Height + 1,10);
+	OnDrawText((char*)"  dMMMP    ", Width, Height + 2,10);
+	OnDrawText((char*)" dMP       ", Width, Height + 3,10);
+	OnDrawText((char*)"dMMMMMP    ", Width, Height + 4,10);
+	
+	OnDrawText((char*)" dMMMMMMP", Width, Height,10);
+	OnDrawText((char*)"   dMP   ", Width, Height + 1,10);
+	OnDrawText((char*)"  dMP    ", Width, Height + 2,10);
+	OnDrawText((char*)" dMP     ", Width, Height + 3,10);
+	OnDrawText((char*)"dMP      ", Width, Height + 4,10);
+	
+	OnDrawText((char*)"    dMMMMMP", Width, Height,10);
+	OnDrawText((char*)"   dMP     ", Width, Height + 1,10);
+	OnDrawText((char*)"  dMMMP    ", Width, Height + 2,10);
+	OnDrawText((char*)" dMP       ", Width, Height + 3,10);
+	OnDrawText((char*)"dMMMMMP    ", Width, Height + 4,10);
+	_System->ClearStage = 0;
+	ResetSystem(Player, PBullet, _System);
+	//_System->Scene_State = Scene_Logo;
 }
 
-void GameOver(System* _System)
+void GameOver(Object* Player, Object* PBullet[], System* _System)
 {
 	float Width = GetMidleWidth((char*)" _______  _______  __   __  _______    _______  __   __  _______  ______   ");
 	float Height = 20.0f;
+
+	ResetSystem(Player, PBullet, _System);
+
+	_System->ClearStage = 0;
+	_System->StageState = 0;
 
 	OnDrawText((char*)" _______  _______  __   __  _______    _______  __   __  _______  ______   ", Width, Height, 2);
 	OnDrawText((char*)"|       ||   _   ||  |_|  ||       |  |       ||  | |  ||       ||    _ |  ", Width, Height+1, 2);
@@ -238,6 +349,7 @@ void GameOver(System* _System)
 	OnDrawText((char*)"|   |_| ||   _   || ||_|| ||   |___   |       | |     | |   |___ |   |  | |", Width, Height+5, 2);
 	OnDrawText((char*)"|_______||__| |__||_|   |_||_______|  |_______|  |___|  |_______||___|  |_|", Width, Height+6, 2);
 	Sleep(3000);
+
 	_System->Scene_State = Scene_Logo;
 }
 
@@ -497,7 +609,7 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 	// 스테이지 클리어
 	if (_System->PlayerKill == 0)
 	{
-		StageClear(_System);
+		StageClear(Player, PBullet, _System);
 	}
 	// 게임오버
 	if (Player->HP <= 0)
@@ -575,6 +687,7 @@ void ShowPlayStage(Object* Player, System* _System)
 					++_System->StageNum;
 					break;
 			}
+
 			case 1:
 			{
 				OnDrawText(Player->Info.Texture, Player->TransInfo.Position.x - 2.0f
@@ -650,7 +763,7 @@ void ShowPlayStage(Object* Player, System* _System)
 				if (Player->TransInfo.Position.y - 30.0f > 12.0f)
 					Player->TransInfo.Position.y -= 1.0f;
 
-				if (Player->TransInfo.Position.x + 38.0f >= 59.0f &&
+				if (Player->TransInfo.Position.x + 38.0f <= 59.0f &&
 					Player->TransInfo.Position.y - 30.0f <= 12.0f)
 				{
 					Sleep(1000);
@@ -664,13 +777,12 @@ void ShowPlayStage(Object* Player, System* _System)
 	}
 }
 
-void StageClear(System* _System)
+void StageClear(Object* Player, Object* PBullet[], System* _System)
 {
 	float Width = GetMidleWidth((char*)" _______  _______  _______  _______  _______    _______  ___      _______  _______  ______    __   __ ");
 	float Height = 20;
 
-	_System->ClearStage++;
-	_System->StageNum = 0;
+	++_System->ClearStage;
 
 	switch (_System->ClearStage)
 	{
@@ -696,6 +808,8 @@ void StageClear(System* _System)
 		break;
 	}
 
+	ResetSystem(Player, PBullet, _System);
+
 	OnDrawText((char*) " _______  _______  _______  _______  _______    _______  ___      _______  _______  ______    __   __ ", Width, Height, 14);
 	OnDrawText((char*) "|       ||       ||   _   ||       ||       |  |       ||   |    |       ||   _   ||    _ |  |  | |  |", Width, Height+1, 14);
 	OnDrawText((char*) "|  _____||_     _||  |_|  ||    ___||    ___|  |       ||   |    |    ___||  |_|  ||   | ||  |  | |  |", Width, Height+2, 14);
@@ -707,23 +821,58 @@ void StageClear(System* _System)
 }
 
 void StageSet(Object* Player, Object* Enemy[], Object* PBullet[], 
-	Object* Destination[], Vector3 _Direction[], Vector3 EDirection[], System* _System)
+	Object* Destination[], Vector3 _Direction[], Vector3 EDirection[], 
+	System* _System)
 {
 	switch (_System->ClearStage)
 	{
 	case 0 :
-
 		if (_System->StageNum == 1)
 		{
-			_System->PlayerKill = 16;
+			//_System->PlayerKill = 16;
+			_System->PlayerKill = 1;
+			_System->MaxEnemy = _System->PlayerKill;
+			_System->StageNum++;
+		}
+	case 1 :
+		if (_System->StageNum == 1)
+		{
+			//_System->PlayerKill = 20;
+			_System->PlayerKill = 1;
+			_System->MaxEnemy = _System->PlayerKill;
+			_System->StageNum++;
+		}
+	case 2 :
+		if (_System->StageNum == 1)
+		{
+			//_System->PlayerKill = 24;
+			_System->PlayerKill = 1;
+			_System->MaxEnemy = _System->PlayerKill;
+			_System->StageNum++;
+		}
+	case 3 :
+		if (_System->StageNum == 1)
+		{
+			//_System->PlayerKill = 28;
+			_System->PlayerKill = 1;
+			_System->MaxEnemy = _System->PlayerKill;
+			_System->StageNum++;
+		}
+	case 4 :
+		if (_System->StageNum == 1)
+		{
+			//_System->PlayerKill = 32;
+			_System->PlayerKill = 1;
+			_System->MaxEnemy = _System->PlayerKill;
 			_System->StageNum++;
 		}
 	}
+	//	적 생성
 	if (_System->EnemyTime)
 	{
-		if (_System->EnemyCount < 16)
+		if (_System->EnemyCount < _System->MaxEnemy)
 		{
-			for (int i = 0; i < 32; ++i)
+			for (int i = 0; i < _System->MaxEnemy; ++i)
 			{
 				if (Enemy[i] == nullptr)
 				{
@@ -767,57 +916,6 @@ void StageSet(Object* Player, Object* Enemy[], Object* PBullet[],
 			}
 		}
 	}
-
-	// 일정한 간격으로 적 생성
-	/*if (_System->EnemyTime)
-	{
-		if (_System->EnemyCount < 32)
-		{
-			for (int i = 0; i < 32; ++i)
-			{
-				if (Enemy[i] == nullptr)
-				{
-					srand((GetTickCount() + i * i) * GetTickCount());
-					Enemy[i] = CreateEnemy((float)(rand() % 79 + 1),
-						(float)(rand() % 19 + 1));
-
-					Destination[i] = CreateDestination(
-						(float)(rand() % 79 + 1),
-						(float)(rand() % 19 + 1));
-					EDirection[i] = GetDirection(Enemy[i], Destination[i]);
-
-					_System->EnemyTime = false;
-					_System->EnemyCount++;
-					break;
-				}
-			}
-		}
-	}
-	// 일정한 간격으로 랜덤한 적에게서 나오는 총알
-	if (_System->EBulletTime)
-	{
-		srand(GetTickCount() * GetTickCount());
-
-		_System->RandNum = rand() % 32;
-
-		if (Enemy[_System->RandNum] != nullptr)
-		{
-			for (int i = 0; i < 128; ++i)
-			{
-				if (PBullet[i] == nullptr)
-				{
-					PBullet[i] = CreateBullet(
-						Enemy[_System->RandNum]->TransInfo.Position.x,
-						Enemy[_System->RandNum]->TransInfo.Position.y,
-						0, 1 + (rand() % 2));
-					_Direction[i] = GetDirection(Player, PBullet[i]);
-					_System->EBulletTime = false;
-					break;
-				}
-			}
-		}
-	}
-	*/
 }
 
 
@@ -892,6 +990,26 @@ void Initialize(Object* _Object, char* _Texture, const int _MaxHP,
 
 }
 
+void ResetSystem(Object* Player, Object* PBullet[], System* _System)
+{
+	_System->EnemyCount = 0;
+	_System->StageNum = 0;
+	_System->Score = 0;
+
+	for (int i = 0; i < 128; ++i)
+	{
+		if (PBullet[i] != nullptr)
+		{
+			delete PBullet[i];
+			PBullet[i] = nullptr;
+		}
+	}
+
+	Player->Power = 1;
+	Player->HP = Player->MaxHP;
+	Player->TransInfo.Position.x = 40.0f;
+	Player->TransInfo.Position.y = 52.0f;
+}
 
 bool Collision(Object* ObjectA, Object* ObjectB)
 {
@@ -1118,7 +1236,7 @@ void ShowUI(Object* Player, System * _System)
 	
 
 	OnDrawText((char*)"Stage  ", Width, 3.0f);
-	OnDrawText(_System->StageNum, 110.0f, 3.0f);
+	OnDrawText(_System->ClearStage+1, 110.0f, 3.0f);
 
 	OnDrawText((char*)"Score: ", Width, 5.0f);
 	OnDrawText(++_System->Score, 110.0f, 5.0f);
