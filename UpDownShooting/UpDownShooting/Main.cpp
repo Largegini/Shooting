@@ -43,6 +43,8 @@ int main(void)
 
 	System* SystemInfo = new System;
 
+	TimeInfomation* TimeInfo = new TimeInfomation;
+
 	Object* Player = new Object;
 	Initialize(Player, (char*)"▲", 10, 10, 40.0f, 52.0f);
 
@@ -68,13 +70,16 @@ int main(void)
 	Initialize(Cursor2, (char*)"◀", 0,0,50.0f + (float)strlen("예"), 
 		27.0f);
 	
+	RecordScore* Ranking[10];
+
 	Vector3 Direction[128];
 	Vector3 EDirection[32];
 
 	system("mode con:cols=120 lines=55");
 
 	HideCursor(false);
-
+	//테스트용
+	SystemInfo->ClearStage = 4;
 	while (true)
 	{
 		if (Time + 100 < GetTickCount64())
@@ -86,19 +91,19 @@ int main(void)
 				if (EnemyTime + 3000 < GetTickCount64())
 				{
 					EnemyTime = GetTickCount64();
-					SystemInfo->EnemyTime = true;
+					TimeInfo->EnemyTime = true;
 				}
 
 				if (EBulletTime + 500 < GetTickCount64())
 				{
 					EBulletTime = GetTickCount64();
-					SystemInfo->EBulletTime = true;
+					TimeInfo->EBulletTime = true;
 				}
 			}
 			system("cls");
 
 			SceneManager(CPosition, Cursor1, Cursor2, Player,
-				Enemy, PBullet, Item, Destination, Direction,EDirection, SystemInfo);
+				Enemy, PBullet, Item, Destination, Ranking, Direction,EDirection, SystemInfo, TimeInfo);
 		}
 	}
 	return 0;

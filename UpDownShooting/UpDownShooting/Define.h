@@ -5,27 +5,33 @@ const int Scene_Stage = 2;
 const int Scene_Exit = 3;
 const int Scene_End = 4;
 const int Scene_GameOver = 5;
+const int Scene_Ranking = 6;
+
 
 void SceneManager(DrawTextInfo* CPosition, Object* MenuCursor,
 	Object* StageCursor, Object* Player, Object* Enemy[],
 	Object* PBullet[], Object* Item[], Object* Destination[],
-	Vector3 Direction[], Vector3 EDirection[], System* _System);
+	RecordScore* Ranking[], Vector3 Direction[], Vector3 EDirection[],
+	System* _System, TimeInfomation* TimeInfo);
 void Logo();
 void Menu(DrawTextInfo* _DrawTextInfo, Object* _Object, System* _System);
 void Stage(Object* StageCursor, Object* Player, Object* Enemy[],
-	Object* PBullet[], Object* Item[], Object* Destination[] ,
-	Vector3 _Direction[], Vector3 EDirection[], System* _System);
-void End(Object* Player, Object* PBullet[], System* _System);
+	Object* PBullet[], Object* Item[], Object* Destination[],
+	Vector3 _Direction[], Vector3 EDirection[], System* _System,
+	TimeInfomation* TimeInfo);
+void End(Object* Player, Object* PBullet[], System* _System,
+	TimeInfomation* TimeInfo);
 void GameOver(Object* Player, Object* PBullet[], System* _System);
+void ShowRanking(RecordScore* Ranking[], System* _System);
 
 void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 	Object* Item[], Object* Destination[], Vector3 _Direction[],
-	Vector3 EDirection[], System* _System);
+	Vector3 EDirection[], System* _System, TimeInfomation* TimeInfo);
 void ShowPlayStage(Object* Player, System* System);
 void StageClear(Object* Player, Object* PBullet[], System* _System);
 void StageSet(Object* Player, Object* Enemy[], Object* PBullet[],
-	Object* Destination[], Vector3 _Direction[], 
-	Vector3 EDirection[], System* _System);
+	Object* Destination[], Vector3 _Direction[], Vector3 EDirection[],
+	System* _System, TimeInfomation* TimeInfo);
 
 void SetCursorPosition(const float _x, const float _y);
 void OnDrawText(const char* _str, const float _x, const float _y, const int _Color = 15);
@@ -56,14 +62,14 @@ void DrawCloud(const float Width, const float Height, const float _x = 0, const 
 void DrawCircle(const float Width, const float Height, const float _x = 0, const float _y= 0);
 void DrawCross(const float Width, const float Height, const float _x, const float _y);
 void ShowUI(Object* Player, System* _System);
-
 void HideCursor(bool _Visible);
 
 //	***	매개변수 관리법 물어보기
 void SceneManager(DrawTextInfo* CPosition, Object* MenuCursor,
 	Object* StageCursor, Object* Player, Object* Enemy[],
-	Object* PBullet[], Object* Item[], Object* Destination[],
-	Vector3 Direction[], Vector3 EDirection[], System* _System)
+	Object* PBullet[], Object* Item[], Object* Destination[], 
+	RecordScore * Ranking[], Vector3 Direction[], Vector3 EDirection[], 
+	System* _System, TimeInfomation* TimeInfo)
 {
 	switch (_System->Scene_State)
 	{
@@ -76,16 +82,19 @@ void SceneManager(DrawTextInfo* CPosition, Object* MenuCursor,
 		break;
 	case Scene_Stage :
 		Stage(StageCursor, Player, Enemy, PBullet, Item, Destination,
-			Direction, EDirection, _System);
+			Direction, EDirection, _System, TimeInfo);
 		break;
 	case Scene_Exit :
 		exit(NULL);
 		break;
 	case Scene_End:
-		End(Player, PBullet, _System);
+		End(Player, PBullet, _System, TimeInfo);
 		break;
 	case Scene_GameOver:
 		GameOver(Player, PBullet, _System);
+		break;
+	case Scene_Ranking:
+		ShowRanking(Ranking, _System);
 		break;
 	}
 }
@@ -178,7 +187,8 @@ void Menu(DrawTextInfo* _DrawTextInfo, Object* _Object, System* _System)
 
 void Stage(Object* StageCursor, Object* Player, Object* Enemy[],
 	Object* PBullet[], Object* Item[], Object* Destination[],
-	Vector3 _Direction[], Vector3 EDirection[], System* _System)
+	Vector3 _Direction[], Vector3 EDirection[], System* _System,
+	TimeInfomation * TimeInfo)
 {
 	float Width = 0;
 	if (_System->StageState == 0) //	오프닝 스킵유무 확인
@@ -224,111 +234,148 @@ void Stage(Object* StageCursor, Object* Player, Object* Enemy[],
 		ShowPlayStage(Player, _System);
 		if(_System->StageNum >0)
 			PlayStage(Player, Enemy, PBullet, Item, Destination, _Direction,
-			EDirection, _System);
+			EDirection, _System, TimeInfo);
 	}
 }
 
-void End(Object* Player, Object* PBullet[], System* _System)
+void End(Object* Player, Object* PBullet[], System* _System,
+	TimeInfomation * TimeInfo)
 {
 	float Width = GetMidleWidth((char*)"    dMMMMMMMMb    dMP   .dMMMb    .dMMMb     dMP   .aMMMb    dMMMMb");
 	float Height = 20.0f;
 
 	_System->StageState = 0;
 
-	OnDrawText((char*)"    dMMMMMMMMb",Width, Height,10);  
-	OnDrawText((char*)"   dMP'dMP'dMP",Width, Height+1,10);            
-	OnDrawText((char*)"  dMP dMP dMP ",Width, Height+2,10);            
-	OnDrawText((char*)" dMP dMP dMP  ",Width, Height+3,10);            
-	OnDrawText((char*)"dMP dMP dMP   ",Width, Height+4,10);
-	
-	OnDrawText((char*)"    dMP",Width+ strlen("    dMMMMMMMMb"), Height,10);
-	OnDrawText((char*)"   amr ",Width+ strlen("    dMMMMMMMMb"), Height+1,10);
-	OnDrawText((char*)"  dMP  ",Width+ strlen("    dMMMMMMMMb"), Height+2,10);
-	OnDrawText((char*)" dMP   ",Width+ strlen("    dMMMMMMMMb"), Height+3,10);
-	OnDrawText((char*)"dMP    ",Width+ strlen("    dMMMMMMMMb"), Height+4,10);
-	
-	OnDrawText((char*)"   .dMMMb ", Width + strlen("    dMMMMMMMMb    dMP"), Height,10);
-	OnDrawText((char*)"  dMP' VP",  Width + strlen("    dMMMMMMMMb    dMP"), Height + 1,10);
-	OnDrawText((char*)"  VMMMb  ",  Width + strlen("    dMMMMMMMMb    dMP"), Height + 2,10);
-	OnDrawText((char*)"dP .dMP ",   Width + strlen("    dMMMMMMMMb    dMP"), Height + 3,10);
-	OnDrawText((char*)"VMMMP' ",   Width  + strlen("    dMMMMMMMMb    dMP"), Height+4, 10);
-	
-	OnDrawText((char*)"   .dMMMb ", Width + strlen("    dMMMMMMMMb    dMP   .dMMMb "), Height, 10);
-	OnDrawText((char*)"  dMP' VP",  Width + strlen("    dMMMMMMMMb    dMP   .dMMMb "), Height + 1, 10);
-	OnDrawText((char*)"  VMMMb  ",  Width + strlen("    dMMMMMMMMb    dMP   .dMMMb "), Height + 2, 10);
-	OnDrawText((char*)"dP .dMP ",   Width + strlen("    dMMMMMMMMb    dMP   .dMMMb "), Height + 3, 10);
-	OnDrawText((char*)"VMMMP' ",    Width + strlen("    dMMMMMMMMb    dMP   .dMMMb "), Height+4, 10);
-	
-	OnDrawText((char*)"    dMP", Width + strlen("    dMMMMMMMMb    dMP   .dMMMb    .dMMMb "), Height, 10);
-	OnDrawText((char*)"   amr ", Width + strlen("    dMMMMMMMMb    dMP   .dMMMb    .dMMMb "), Height + 1,10);
-	OnDrawText((char*)"  dMP  ", Width + strlen("    dMMMMMMMMb    dMP   .dMMMb    .dMMMb "), Height + 2,10);
-	OnDrawText((char*)" dMP   ", Width + strlen("    dMMMMMMMMb    dMP   .dMMMb    .dMMMb "), Height + 3,10);
-	OnDrawText((char*)"dMP    ", Width + strlen("    dMMMMMMMMb    dMP   .dMMMb    .dMMMb "), Height + 4,10);
-	
-	OnDrawText((char*)"   .aMMMb", Width + strlen("    dMMMMMMMMb    dMP   .dMMMb    .dMMMb     dMP"), Height,10);
-	OnDrawText((char*)"  dMP'dMP", Width + strlen("    dMMMMMMMMb    dMP   .dMMMb    .dMMMb     dMP"), Height + 1, 10);
-	OnDrawText((char*)" dMP dMP	", Width + strlen("    dMMMMMMMMb    dMP   .dMMMb    .dMMMb     dMP"), Height + 2, 10);
-	OnDrawText((char*)"dMP.aMP	", Width + strlen("    dMMMMMMMMb    dMP   .dMMMb    .dMMMb     dMP"), Height + 3, 10);
-	OnDrawText((char*)"VMMMP'   ", Width + strlen("    dMMMMMMMMb    dMP   .dMMMb    .dMMMb     dMP"), Height+4, 10);
-	
-	OnDrawText((char*)"    dMMMMb", Width + strlen("    dMMMMMMMMb    dMP   .dMMMb    .dMMMb     dMP   .aMMMb"), Height, 10);
-	OnDrawText((char*)"   dMP dMP", Width + strlen("    dMMMMMMMMb    dMP   .dMMMb    .dMMMb     dMP   .aMMMb"), Height + 1, 10);
-	OnDrawText((char*)"  dMP dMP ", Width + strlen("    dMMMMMMMMb    dMP   .dMMMb    .dMMMb     dMP   .aMMMb"), Height + 2, 10);
-	OnDrawText((char*)" dMP dMP  ", Width + strlen("    dMMMMMMMMb    dMP   .dMMMb    .dMMMb     dMP   .aMMMb"), Height + 3, 10);
-	OnDrawText((char*)"dMP dMP   ", Width + strlen("    dMMMMMMMMb    dMP   .dMMMb    .dMMMb     dMP   .aMMMb"), Height+4, 10);
-	
+	++TimeInfo->Result;
+
+	if (TimeInfo->Result >= 3)
+	{
+		OnDrawText((char*)"    dMMMMMMMMb", Width, Height, 10);
+		OnDrawText((char*)"   dMP'dMP'dMP", Width, Height + 1.0f, 10);
+		OnDrawText((char*)"  dMP dMP dMP ", Width, Height + 2.0f, 10);
+		OnDrawText((char*)" dMP dMP dMP  ", Width, Height + 3.0f, 10);
+		OnDrawText((char*)"dMP dMP dMP   ", Width, Height + 4.0f, 10);
+	}
+	if (TimeInfo->Result >= 6)
+	{
+		OnDrawText((char*)"    dMP", Width + strlen("    dMMMMMMMMb"), Height, 10);
+		OnDrawText((char*)"   amr ", Width + strlen("    dMMMMMMMMb"), Height + 1.0f, 10);
+		OnDrawText((char*)"  dMP  ", Width + strlen("    dMMMMMMMMb"), Height + 2.0f, 10);
+		OnDrawText((char*)" dMP   ", Width + strlen("    dMMMMMMMMb"), Height + 3.0f, 10);
+		OnDrawText((char*)"dMP    ", Width + strlen("    dMMMMMMMMb"), Height + 4.0f, 10); 
+	}
+	if (TimeInfo->Result >= 9)
+	{ 
+		OnDrawText((char*)"   .dMMMb ", Width + strlen("    dMMMMMMMMb    dMP"), Height, 10);
+		OnDrawText((char*)"  dMP' VP", Width + strlen("    dMMMMMMMMb    dMP"), Height + 1.0f, 10);
+		OnDrawText((char*)"  VMMMb  ", Width + strlen("    dMMMMMMMMb    dMP"), Height + 2.0f, 10);
+		OnDrawText((char*)"dP .dMP ", Width + strlen("    dMMMMMMMMb    dMP"), Height + 3.0f, 10);
+		OnDrawText((char*)"VMMMP' ", Width + strlen("    dMMMMMMMMb    dMP"), Height + 4.0f, 10);
+	}
+	if (TimeInfo->Result >= 12)
+	{
+		OnDrawText((char*)"   .dMMMb ", Width + strlen("    dMMMMMMMMb    dMP   .dMMMb "), Height, 10);
+		OnDrawText((char*)"  dMP' VP", Width + strlen("    dMMMMMMMMb    dMP   .dMMMb "), Height + 1.0f, 10);
+		OnDrawText((char*)"  VMMMb  ", Width + strlen("    dMMMMMMMMb    dMP   .dMMMb "), Height + 2.0f, 10);
+		OnDrawText((char*)"dP .dMP ", Width + strlen("    dMMMMMMMMb    dMP   .dMMMb "), Height + 3.0f, 10);
+		OnDrawText((char*)"VMMMP' ", Width + strlen("    dMMMMMMMMb    dMP   .dMMMb "), Height + 4.0f, 10);
+	}
+	if (TimeInfo->Result >= 15)
+	{
+		OnDrawText((char*)"    dMP", Width + strlen("    dMMMMMMMMb    dMP   .dMMMb    .dMMMb "), Height, 10);
+		OnDrawText((char*)"   amr ", Width + strlen("    dMMMMMMMMb    dMP   .dMMMb    .dMMMb "), Height + 1.0f, 10);
+		OnDrawText((char*)"  dMP  ", Width + strlen("    dMMMMMMMMb    dMP   .dMMMb    .dMMMb "), Height + 2.0f, 10);
+		OnDrawText((char*)" dMP   ", Width + strlen("    dMMMMMMMMb    dMP   .dMMMb    .dMMMb "), Height + 3.0f, 10);
+		OnDrawText((char*)"dMP    ", Width + strlen("    dMMMMMMMMb    dMP   .dMMMb    .dMMMb "), Height + 4.0f, 10);
+	}
+	if (TimeInfo->Result >= 18)
+	{
+		OnDrawText((char*)"   .aMMMb", Width + strlen("    dMMMMMMMMb    dMP   .dMMMb    .dMMMb     dMP"), Height, 10);
+		OnDrawText((char*)"  dMP'dMP", Width + strlen("    dMMMMMMMMb    dMP   .dMMMb    .dMMMb     dMP"), Height + 1.0f, 10);
+		OnDrawText((char*)" dMP dMP	", Width + strlen("    dMMMMMMMMb    dMP   .dMMMb    .dMMMb     dMP"), Height + 2.0f, 10);
+		OnDrawText((char*)"dMP.aMP	", Width + strlen("    dMMMMMMMMb    dMP   .dMMMb    .dMMMb     dMP"), Height + 3.0f, 10);
+		OnDrawText((char*)"VMMMP'   ", Width + strlen("    dMMMMMMMMb    dMP   .dMMMb    .dMMMb     dMP"), Height + 4.0f, 10);
+	}
+	if (TimeInfo->Result >= 21)
+	{
+		OnDrawText((char*)"    dMMMMb", Width + strlen("    dMMMMMMMMb    dMP   .dMMMb    .dMMMb     dMP   .aMMMb"), Height, 10);
+		OnDrawText((char*)"   dMP dMP", Width + strlen("    dMMMMMMMMb    dMP   .dMMMb    .dMMMb     dMP   .aMMMb"), Height + 1.0f, 10);
+		OnDrawText((char*)"  dMP dMP ", Width + strlen("    dMMMMMMMMb    dMP   .dMMMb    .dMMMb     dMP   .aMMMb"), Height + 2.0f, 10);
+		OnDrawText((char*)" dMP dMP  ", Width + strlen("    dMMMMMMMMb    dMP   .dMMMb    .dMMMb     dMP   .aMMMb"), Height + 3.0f, 10);
+		OnDrawText((char*)"dMP dMP   ", Width + strlen("    dMMMMMMMMb    dMP   .dMMMb    .dMMMb     dMP   .aMMMb"), Height + 4.0f, 10);
+	}
+
 	Width = GetMidleWidth((char*)"   .aMMMb   .aMMMb    dMMMMMMMMb    dMMMMb     dMP    dMMMMMP dMMMMMMP    dMMMMMP");
 	Height = 27.0f;
-	OnDrawText((char*)"   .aMMMb", Width, Height, 10);        
-	OnDrawText((char*)"  dMP'VMP", Width, Height + 1, 10);    
-	OnDrawText((char*)" dMP     ", Width, Height + 2, 10);    
-	OnDrawText((char*)"dMP.aMP  ", Width, Height + 3, 10);    
-	OnDrawText((char*)"VMMMP'   ", Width, Height + 4, 10); 
-	
-	OnDrawText((char*)"   .aMMMb", Width, Height, 10);
-	OnDrawText((char*)"  dMP'dMP", Width, Height + 1, 10);
-	OnDrawText((char*)" dMP dMP	", Width, Height + 2, 10);
-	OnDrawText((char*)"dMP.aMP	", Width, Height + 3, 10);
-	OnDrawText((char*)"VMMMP'   ", Width, Height + 4, 10);
-	
-	OnDrawText((char*)"    dMMMMMMMMb", Width, Height,10);
-	OnDrawText((char*)"   dMP'dMP'dMP", Width, Height + 1, 10);
-	OnDrawText((char*)"  dMP dMP dMP ", Width, Height + 2, 10);
-	OnDrawText((char*)" dMP dMP dMP  ", Width, Height + 3, 10);
-	OnDrawText((char*)"dMP dMP dMP   ", Width, Height + 4, 10);
-	                                                                       
-	OnDrawText((char*)"    dMMMMb", Width, Height, 10);
-	OnDrawText((char*)"   dMP.dMP", Width, Height + 1,10);
-	OnDrawText((char*)"  dMMMMP' ", Width, Height + 2,10);
-	OnDrawText((char*)" dMP      ", Width, Height + 3,10);
-	OnDrawText((char*)"dMP       ", Width, Height + 4,10);
-	
-	OnDrawText((char*)"     dMP", Width, Height,10);
-	OnDrawText((char*)"    dMP ", Width, Height + 1,10);
-	OnDrawText((char*)"   dMP  ", Width, Height + 2,10);
-	OnDrawText((char*)"  dMP   ", Width, Height + 3,10);
-	OnDrawText((char*)" dMMMMMP", Width, Height + 4,10);
-	
-	OnDrawText((char*)"    dMMMMMP", Width, Height,10);
-	OnDrawText((char*)"   dMP     ", Width, Height + 1,10);
-	OnDrawText((char*)"  dMMMP    ", Width, Height + 2,10);
-	OnDrawText((char*)" dMP       ", Width, Height + 3,10);
-	OnDrawText((char*)"dMMMMMP    ", Width, Height + 4,10);
-	
-	OnDrawText((char*)" dMMMMMMP", Width, Height,10);
-	OnDrawText((char*)"   dMP   ", Width, Height + 1,10);
-	OnDrawText((char*)"  dMP    ", Width, Height + 2,10);
-	OnDrawText((char*)" dMP     ", Width, Height + 3,10);
-	OnDrawText((char*)"dMP      ", Width, Height + 4,10);
-	
-	OnDrawText((char*)"    dMMMMMP", Width, Height,10);
-	OnDrawText((char*)"   dMP     ", Width, Height + 1,10);
-	OnDrawText((char*)"  dMMMP    ", Width, Height + 2,10);
-	OnDrawText((char*)" dMP       ", Width, Height + 3,10);
-	OnDrawText((char*)"dMMMMMP    ", Width, Height + 4,10);
+	if (TimeInfo->Result >= 26)
+	{
+		OnDrawText((char*)"   .aMMMb", Width, Height, 10);
+		OnDrawText((char*)"  dMP'VMP", Width, Height + 1.0f, 10);
+		OnDrawText((char*)" dMP     ", Width, Height + 2.0f, 10);
+		OnDrawText((char*)"dMP.aMP  ", Width, Height + 3.0f, 10);
+		OnDrawText((char*)"VMMMP'   ", Width, Height + 4.0f, 10);
+	}
+	if (TimeInfo->Result >= 31)
+	{
+		OnDrawText((char*)"   .aMMMb", Width + strlen("   .aMMMb"), Height, 10);
+		OnDrawText((char*)"  dMP'dMP", Width + strlen("   .aMMMb"), Height + 1.0f, 10);
+		OnDrawText((char*)" dMP dMP	", Width + strlen("   .aMMMb"), Height + 2.0f, 10);
+		OnDrawText((char*)"dMP.aMP	", Width + strlen("   .aMMMb"), Height + 3.0f, 10);
+		OnDrawText((char*)"VMMMP'   ", Width + strlen("   .aMMMb"), Height + 4.0f, 10);
+	}
+	if (TimeInfo->Result >= 36)
+	{
+		OnDrawText((char*)"    dMMMMMMMMb", Width + strlen("   .aMMMb   .aMMMb"), Height, 10);
+		OnDrawText((char*)"   dMP'dMP'dMP", Width + strlen("   .aMMMb   .aMMMb"), Height + 1.0f, 10);
+		OnDrawText((char*)"  dMP dMP dMP ", Width + strlen("   .aMMMb   .aMMMb"), Height + 2.0f, 10);
+		OnDrawText((char*)" dMP dMP dMP  ", Width + strlen("   .aMMMb   .aMMMb"), Height + 3.0f, 10);
+		OnDrawText((char*)"dMP dMP dMP   ", Width + strlen("   .aMMMb   .aMMMb"), Height + 4.0f, 10);
+	}
+	if (TimeInfo->Result >= 41)
+	{
+		OnDrawText((char*)"    dMMMMb", Width + strlen("   .aMMMb   .aMMMb    dMMMMMMMMb"), Height, 10);
+		OnDrawText((char*)"   dMP.dMP", Width + strlen("   .aMMMb   .aMMMb    dMMMMMMMMb"), Height + 1.0f, 10);
+		OnDrawText((char*)"  dMMMMP' ", Width + strlen("   .aMMMb   .aMMMb    dMMMMMMMMb"), Height + 2.0f, 10);
+		OnDrawText((char*)" dMP      ", Width + strlen("   .aMMMb   .aMMMb    dMMMMMMMMb"), Height + 3.0f, 10);
+		OnDrawText((char*)"dMP       ", Width + strlen("   .aMMMb   .aMMMb    dMMMMMMMMb"), Height + 4.0f, 10);
+	}
+	if (TimeInfo->Result >= 46)
+	{
+		OnDrawText((char*)"     dMP", Width + strlen("   .aMMMb   .aMMMb    dMMMMMMMMb    dMMMMb"), Height, 10);
+		OnDrawText((char*)"    dMP ", Width + strlen("   .aMMMb   .aMMMb    dMMMMMMMMb    dMMMMb"), Height + 1.0f, 10);
+		OnDrawText((char*)"   dMP  ", Width + strlen("   .aMMMb   .aMMMb    dMMMMMMMMb    dMMMMb"), Height + 2.0f, 10);
+		OnDrawText((char*)"  dMP   ", Width + strlen("   .aMMMb   .aMMMb    dMMMMMMMMb    dMMMMb"), Height + 3.0f, 10);
+		OnDrawText((char*)" dMMMMMP", Width + strlen("   .aMMMb   .aMMMb    dMMMMMMMMb    dMMMMb"), Height + 4.0f, 10);
+	}
+	if (TimeInfo->Result >= 51)
+	{
+		OnDrawText((char*)"    dMMMMMP", Width + strlen("   .aMMMb   .aMMMb    dMMMMMMMMb    dMMMMb     dMP"), Height, 10);
+		OnDrawText((char*)"   dMP     ", Width + strlen("   .aMMMb   .aMMMb    dMMMMMMMMb    dMMMMb     dMP"), Height + 1.0f, 10);
+		OnDrawText((char*)"  dMMMP    ", Width + strlen("   .aMMMb   .aMMMb    dMMMMMMMMb    dMMMMb     dMP"), Height + 2.0f, 10);
+		OnDrawText((char*)" dMP       ", Width + strlen("   .aMMMb   .aMMMb    dMMMMMMMMb    dMMMMb     dMP"), Height + 3.0f, 10);
+		OnDrawText((char*)"dMMMMMP    ", Width + strlen("   .aMMMb   .aMMMb    dMMMMMMMMb    dMMMMb     dMP"), Height + 4.0f, 10);
+	}
+	if (TimeInfo->Result >= 56)
+	{
+		OnDrawText((char*)" dMMMMMMP", Width + strlen("   .aMMMb   .aMMMb    dMMMMMMMMb    dMMMMb     dMP    dMMMMMP"), Height, 10);
+		OnDrawText((char*)"   dMP   ", Width + strlen("   .aMMMb   .aMMMb    dMMMMMMMMb    dMMMMb     dMP    dMMMMMP"), Height + 1.0f, 10);
+		OnDrawText((char*)"  dMP    ", Width + strlen("   .aMMMb   .aMMMb    dMMMMMMMMb    dMMMMb     dMP    dMMMMMP"), Height + 2.0f, 10);
+		OnDrawText((char*)" dMP     ", Width + strlen("   .aMMMb   .aMMMb    dMMMMMMMMb    dMMMMb     dMP    dMMMMMP"), Height + 3.0f, 10);
+		OnDrawText((char*)"dMP      ", Width + strlen("   .aMMMb   .aMMMb    dMMMMMMMMb    dMMMMb     dMP    dMMMMMP"), Height + 4.0f, 10);
+	}
+	if (TimeInfo->Result >= 61)
+	{
+		OnDrawText((char*)"    dMMMMMP", Width + strlen("   .aMMMb   .aMMMb    dMMMMMMMMb    dMMMMb     dMP    dMMMMMP dMMMMMMP"), Height, 10);
+		OnDrawText((char*)"   dMP     ", Width + strlen("   .aMMMb   .aMMMb    dMMMMMMMMb    dMMMMb     dMP    dMMMMMP dMMMMMMP"), Height + 1.0f, 10);
+		OnDrawText((char*)"  dMMMP    ", Width + strlen("   .aMMMb   .aMMMb    dMMMMMMMMb    dMMMMb     dMP    dMMMMMP dMMMMMMP"), Height + 2.0f, 10);
+		OnDrawText((char*)" dMP       ", Width + strlen("   .aMMMb   .aMMMb    dMMMMMMMMb    dMMMMb     dMP    dMMMMMP dMMMMMMP"), Height + 3.0f, 10);
+		OnDrawText((char*)"dMMMMMP    ", Width + strlen("   .aMMMb   .aMMMb    dMMMMMMMMb    dMMMMb     dMP    dMMMMMP dMMMMMMP"), Height + 4.0f, 10);
+		TimeInfo->EndTime++;
+	}
 	_System->ClearStage = 0;
-	ResetSystem(Player, PBullet, _System);
-	//_System->Scene_State = Scene_Logo;
+	
+	if(TimeInfo->EndTime>=20)
+		_System->Scene_State = Scene_Ranking;
 }
 
 void GameOver(Object* Player, Object* PBullet[], System* _System)
@@ -342,23 +389,75 @@ void GameOver(Object* Player, Object* PBullet[], System* _System)
 	_System->StageState = 0;
 
 	OnDrawText((char*)" _______  _______  __   __  _______    _______  __   __  _______  ______   ", Width, Height, 2);
-	OnDrawText((char*)"|       ||   _   ||  |_|  ||       |  |       ||  | |  ||       ||    _ |  ", Width, Height+1, 2);
-	OnDrawText((char*)"|    ___||  |_|  ||       ||    ___|  |   _   ||  |_|  ||    ___||   | ||  ", Width, Height+2, 2);
-	OnDrawText((char*)"|   | __ |       ||       ||   |___   |  | |  ||       ||   |___ |   |_||_ ", Width, Height+3, 2);
-	OnDrawText((char*)"|   ||  ||       ||       ||    ___|  |  |_|  ||       ||    ___||    __  |", Width, Height+4, 2);
-	OnDrawText((char*)"|   |_| ||   _   || ||_|| ||   |___   |       | |     | |   |___ |   |  | |", Width, Height+5, 2);
-	OnDrawText((char*)"|_______||__| |__||_|   |_||_______|  |_______|  |___|  |_______||___|  |_|", Width, Height+6, 2);
+	OnDrawText((char*)"|       ||   _   ||  |_|  ||       |  |       ||  | |  ||       ||    _ |  ", Width, Height+1.0f, 2);
+	OnDrawText((char*)"|    ___||  |_|  ||       ||    ___|  |   _   ||  |_|  ||    ___||   | ||  ", Width, Height+2.0f, 2);
+	OnDrawText((char*)"|   | __ |       ||       ||   |___   |  | |  ||       ||   |___ |   |_||_ ", Width, Height+3.0f, 2);
+	OnDrawText((char*)"|   ||  ||       ||       ||    ___|  |  |_|  ||       ||    ___||    __  |", Width, Height+4.0f, 2);
+	OnDrawText((char*)"|   |_| ||   _   || ||_|| ||   |___   |       | |     | |   |___ |   |  | |", Width, Height+5.0f, 2);
+	OnDrawText((char*)"|_______||__| |__||_|   |_||_______|  |_______|  |___|  |_______||___|  |_|", Width, Height+6.0f, 2);
 	Sleep(3000);
 
 	_System->Scene_State = Scene_Logo;
 }
 
+void ShowRanking(RecordScore* Ranking[], System* _System)
+{
+	float Width = GetMidleWidth((char*)"_______  _____  _______ _______       ");
+	float Height = 2.0f;
+	if (_System->TimeInfo.ShowRanking < 20)
+	{
+		_System->TimeInfo.ShowRanking++;
+
+		OnDrawText((char*)"_______  _____  _______ _______       ", Width, Height);
+		OnDrawText((char*)"   |    |     |    |    |_____| |     ", Width, Height + 1.0f);
+		OnDrawText((char*)"   |    |_____|    |    |     | |_____", Width, Height + 2.0f);
+
+		for (int i = 0; i < 10; ++i)
+		{
+			for (int j = 0; j < 10; ++j)
+			{
+				if (Ranking[i]->Total > Ranking[j]->Total)
+				{
+					int Temp = Ranking[j]->Total;
+					Ranking[j]->Total = Ranking[i]->Total;
+					Ranking[i]->Total = Temp;
+				}
+			}
+		}
+
+		for (int i = 0; i < 10; ++i)
+		{
+			if (Ranking[i]->Total < _System->RScore.Total)
+			{
+				Ranking[i]->Total = _System->RScore.Total;
+				Ranking[i]->Name = SetName();
+				break;
+			}
+
+			else
+				Ranking[i]->Name = (char*)"***";
+		}
+
+		Height = 7.0f;
+
+		for (int i = 0; i < 10; ++i)
+		{
+			OnDrawText((char*)"1st", Width + 5.0f, Height + i);
+			OnDrawText(Ranking[i]->Total, Width, Height + i);
+			OnDrawText(Ranking[i]->Name, Width + strlen("_______  _____  _______ _______       "), Height + i);
+		}
+	}
+
+	else
+		_System->Scene_State = Scene_Logo;
+}
+
 void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 	Object* Item[], Object* Destination[], Vector3 _Direction[],
-	Vector3 EDirection[], System* _System)
+	Vector3 EDirection[], System* _System, TimeInfomation * TimeInfo)
 {
 	StageSet(Player, Enemy, PBullet, Destination, _Direction, EDirection,
-		_System);
+		_System, TimeInfo);
 
 	// 스페이스바를 눌렀을 때 총알 생성
 	if (GetAsyncKeyState(VK_SPACE))
@@ -447,10 +546,10 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 
 				case 2: // 적 유도 총알 출력
 				{
-					if (_System->EBHomingTime[i] < 50)
+					if (TimeInfo->EBHomingTime[i] < 50)
 					{
 						_Direction[i] = GetDirection(Player, PBullet[i]);
-						_System->EBHomingTime[i]++;
+						TimeInfo->EBHomingTime[i]++;
 					}
 					
 					PBullet[i]->TransInfo.Position.x += _Direction[i].x;
@@ -477,7 +576,7 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 			{
 				delete PBullet[i];
 				PBullet[i] = nullptr;
-				_System->EBHomingTime[i] = 0;
+				TimeInfo->EBHomingTime[i] = 0;
 				break;
 			}
 		}
@@ -509,7 +608,7 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 				delete PBullet[i];
 				PBullet[i] = nullptr;
 				Player->HP--;
-				_System->EBHomingTime[i] = 0;
+				TimeInfo->EBHomingTime[i] = 0;
 				break;
 			}
 		}
@@ -782,47 +881,50 @@ void StageClear(Object* Player, Object* PBullet[], System* _System)
 	float Width = GetMidleWidth((char*)" _______  _______  _______  _______  _______    _______  ___      _______  _______  ______    __   __ ");
 	float Height = 20;
 
-	++_System->ClearStage;
+	
 
 	switch (_System->ClearStage)
 	{
-	case 1:
+	case 0:
 		_System->RScore.Stage1 = _System->Score;
 		_System->RScore.Total += _System->Score;
+
 		break;
-	case 2:
+	case 1:
 		_System->RScore.Stage2 = _System->Score;
 		_System->RScore.Total += _System->Score;
 		break;
-	case 3:
+	case 2:
 		_System->RScore.Stage3 = _System->Score;
 		_System->RScore.Total += _System->Score;
 		break;
-	case 4:
+	case 3:
 		_System->RScore.Stage4 = _System->Score;
 		_System->RScore.Total += _System->Score;
 		break;
-	case 5:
+	case 4:
 		_System->RScore.Stage5 = _System->Score;
 		_System->RScore.Total += _System->Score;
 		break;
 	}
 
+	++_System->ClearStage;
+
 	ResetSystem(Player, PBullet, _System);
 
 	OnDrawText((char*) " _______  _______  _______  _______  _______    _______  ___      _______  _______  ______    __   __ ", Width, Height, 14);
-	OnDrawText((char*) "|       ||       ||   _   ||       ||       |  |       ||   |    |       ||   _   ||    _ |  |  | |  |", Width, Height+1, 14);
-	OnDrawText((char*) "|  _____||_     _||  |_|  ||    ___||    ___|  |       ||   |    |    ___||  |_|  ||   | ||  |  | |  |", Width, Height+2, 14);
-	OnDrawText((char*) "| |_____   |   |  |       ||   | __ |   |___   |       ||   |    |   |___ |       ||   |_||_ |  | |  |", Width, Height+3, 14);
-	OnDrawText((char*) "|_____  |  |   |  |       ||   ||  ||    ___|  |      _||   |___ |    ___||       ||    __  ||__| |__|", Width, Height+4, 14);
-	OnDrawText((char*) " _____| |  |   |  |   _   ||   |_| ||   |___   |     |_ |       ||   |___ |   _   ||   |  | | __   __ ", Width, Height+5, 14);
-	OnDrawText((char*) "|_______|  |___|  |__| |__||_______||_______|  |_______||_______||_______||__| |__||___|  |_||__| |__|", Width, Height+6, 14);
+	OnDrawText((char*) "|       ||       ||   _   ||       ||       |  |       ||   |    |       ||   _   ||    _ |  |  | |  |", Width, Height+1.0f, 14);
+	OnDrawText((char*) "|  _____||_     _||  |_|  ||    ___||    ___|  |       ||   |    |    ___||  |_|  ||   | ||  |  | |  |", Width, Height+2.0f, 14);
+	OnDrawText((char*) "| |_____   |   |  |       ||   | __ |   |___   |       ||   |    |   |___ |       ||   |_||_ |  | |  |", Width, Height+3.0f, 14);
+	OnDrawText((char*) "|_____  |  |   |  |       ||   ||  ||    ___|  |      _||   |___ |    ___||       ||    __  ||__| |__|", Width, Height+4.0f, 14);
+	OnDrawText((char*) " _____| |  |   |  |   _   ||   |_| ||   |___   |     |_ |       ||   |___ |   _   ||   |  | | __   __ ", Width, Height+5.0f, 14);
+	OnDrawText((char*) "|_______|  |___|  |__| |__||_______||_______|  |_______||_______||_______||__| |__||___|  |_||__| |__|", Width, Height+6.0f, 14);
 	Sleep(2000);
 }
 
 void StageSet(Object* Player, Object* Enemy[], Object* PBullet[], 
 	Object* Destination[], Vector3 _Direction[], Vector3 EDirection[], 
-	System* _System)
+	System* _System, TimeInfomation* TimeInfo)
 {
 	switch (_System->ClearStage)
 	{
@@ -868,7 +970,7 @@ void StageSet(Object* Player, Object* Enemy[], Object* PBullet[],
 		}
 	}
 	//	적 생성
-	if (_System->EnemyTime)
+	if (TimeInfo->EnemyTime)
 	{
 		if (_System->EnemyCount < _System->MaxEnemy)
 		{
@@ -885,7 +987,7 @@ void StageSet(Object* Player, Object* Enemy[], Object* PBullet[],
 						(float)(rand() % 19 + 1));
 					EDirection[i] = GetDirection(Enemy[i], Destination[i]);
 
-					_System->EnemyTime = false;
+					TimeInfo->EnemyTime = false;
 					_System->EnemyCount++;
 					break;
 				}
@@ -893,7 +995,7 @@ void StageSet(Object* Player, Object* Enemy[], Object* PBullet[],
 		}
 	}
 	// 일정한 간격으로 랜덤한 적에게서 나오는 총알
-	if (_System->EBulletTime)
+	if (TimeInfo->EBulletTime)
 	{
 		srand(GetTickCount() * GetTickCount());
 
@@ -910,7 +1012,7 @@ void StageSet(Object* Player, Object* Enemy[], Object* PBullet[],
 						Enemy[_System->RandNum]->TransInfo.Position.y,
 						0, 1 + (rand() % 2));
 					_Direction[i] = GetDirection(Player, PBullet[i]);
-					_System->EBulletTime = false;
+					TimeInfo->EBulletTime = false;
 					break;
 				}
 			}
@@ -987,7 +1089,20 @@ void Initialize(Object* _Object, char* _Texture, const int _MaxHP,
 	_Object->TransInfo.Position = Vector3 (_PosX, _PosY, _PosZ);
 	_Object->TransInfo.Rotation = Vector3 (0, 0, 0);
 	_Object->TransInfo.Scale = Vector3 ((float)(strlen(_Object->Info.Texture)), 1, 0);
+}
 
+void Initialize(RecordScore* Ranking, char* _Name, const int _Total,
+	const int _Stage1, const int _Stage2, const int _Stage3,
+	const int _Stage4, const int _Stage5)
+{
+	Ranking->Name = (_Name == nullptr) ? SetName() : _Name;
+
+	Ranking->Total = _Total;
+	Ranking->Stage1 = _Stage1;
+	Ranking->Stage2 = _Stage2;
+	Ranking->Stage3 = _Stage3;
+	Ranking->Stage4 = _Stage4;
+	Ranking->Stage5 = _Stage5;
 }
 
 void ResetSystem(Object* Player, Object* PBullet[], System* _System)
@@ -1025,10 +1140,14 @@ bool Collision(Object* ObjectA, Object* ObjectB)
 
 char* SetName()
 {
+	float Width = GetMidleWidth((char*)"이름을 입력하세요 : ");
+	float Height = 20.0f;
 	char Buffer[128] = "";
 	char* pName = new char[strlen(Buffer) + 1];
 
-	cout << "이름을 입력하세요 : ";	cin >> Buffer;
+	OnDrawText((char*)"이름을 입력하세요 : ",Width, Height);
+	SetCursorPosition(Width + strlen("이름을 입력하세요 : "), Height);
+	cin >> Buffer;
 	strcpy(pName, Buffer);
 
 	return pName;

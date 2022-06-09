@@ -46,6 +46,8 @@ struct  DrawTextInfo
 };
 struct RecordScore
 {
+	char* Name;
+
 	int Total=0;
 	int Stage1 = 0;
 	int Stage2 = 0;
@@ -54,11 +56,22 @@ struct RecordScore
 	int Stage5 = 0;
 };
 
+struct TimeInfomation
+{
+	int EBHomingTime[128] = { 0 };
+	int Result = 0;
+	int EndTime = 0;
+	int ShowRanking = 0;
+
+	bool EnemyTime = false;
+	bool EBulletTime = false;
+};
+
 struct System
 {
 	int ClearStage = 0;
 	int EnemyCount = 0;
-	int EBHomingTime[128] = { 0 };
+	
 	int MaxEnemy = 0;
 	int PlayerKill = 32;
 	int RandNum = 0;
@@ -66,9 +79,8 @@ struct System
 	int StageState = 0;
 	int StageNum = 0;
 	int Score = 0;
-
-
-	bool EnemyTime = false;
-	bool EBulletTime = false;
+	
 	RecordScore RScore;
+	TimeInfomation TimeInfo;
 };
+
