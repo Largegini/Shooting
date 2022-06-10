@@ -41,6 +41,9 @@ void UpdateInput(Object* _Object);
 void Initialize(Object* _Object, char* _Texture, const int _MaxHP,
 	const int HP, const float _PosX, const float _PosY,
 	const float _PosZ = 0);
+void Initialize(RecordScore* Ranking, char* _Name, const int _Total,
+	const int _Stage1, const int _Stage2, const int _Stage3,
+	const int _Stage4, const int _Stage5);
 void ResetSystem(Object* Player, Object* PBullet[], System* _System);
 
 bool Collision(Object* ObjectA, Object* ObjectB);
@@ -374,8 +377,12 @@ void End(Object* Player, Object* PBullet[], System* _System,
 	}
 	_System->ClearStage = 0;
 	
-	if(TimeInfo->EndTime>=20)
+	if (TimeInfo->EndTime >= 20)
+	{
 		_System->Scene_State = Scene_Ranking;
+		TimeInfo->Result = 0;
+		TimeInfo->EndTime = 0;
+	}
 }
 
 void GameOver(Object* Player, Object* PBullet[], System* _System)
@@ -402,8 +409,12 @@ void GameOver(Object* Player, Object* PBullet[], System* _System)
 
 void ShowRanking(RecordScore* Ranking[], System* _System)
 {
-	float Width = GetMidleWidth((char*)"_______  _____  _______ _______       ");
+	float Width = GetMidleWidth((char*)"게임을 종료할 경우 기록이 전부 사라집니다.");
 	float Height = 2.0f;
+
+	OnDrawText((char*)"게임을 종료할 경우 기록이 전부 사라집니다.", Width, 50.0f);
+
+	Width = GetMidleWidth((char*)"_______  _____  _______ _______       ");
 	if (_System->TimeInfo.ShowRanking < 20)
 	{
 		_System->TimeInfo.ShowRanking++;
@@ -412,44 +423,404 @@ void ShowRanking(RecordScore* Ranking[], System* _System)
 		OnDrawText((char*)"   |    |     |    |    |_____| |     ", Width, Height + 1.0f);
 		OnDrawText((char*)"   |    |_____|    |    |     | |_____", Width, Height + 2.0f);
 
-		for (int i = 0; i < 10; ++i)
+		if (_System->PlayerNameInput == 0)
 		{
-			for (int j = 0; j < 10; ++j)
+			for (int i = 0; i < 10; ++i)
 			{
-				if (Ranking[i]->Total > Ranking[j]->Total)
+				for (int j = 0; j < 10; ++j)
 				{
-					int Temp = Ranking[j]->Total;
-					Ranking[j]->Total = Ranking[i]->Total;
-					Ranking[i]->Total = Temp;
+					if (Ranking[i]->Total > Ranking[j]->Total)
+					{
+						int Temp = Ranking[j]->Total;
+						Ranking[j]->Total = Ranking[i]->Total;
+						Ranking[i]->Total = Temp;
+					}
 				}
 			}
-		}
 
-		for (int i = 0; i < 10; ++i)
-		{
-			if (Ranking[i]->Total < _System->RScore.Total)
+			
+			for (int i = 0; i < 10; ++i)
 			{
-				Ranking[i]->Total = _System->RScore.Total;
-				Ranking[i]->Name = SetName();
-				break;
-			}
+				if (Ranking[i]->Total < _System->RScore.Total)
+				{
+					int Temp = Ranking[i]->Total;
+					for (int j = 0; j < 10; ++j)
+					{
+						if (Temp > Ranking[j]->Total)
+						{
+							int Temp2 = Ranking[j]->Total;
+							Ranking[j]->Total = Temp;
+							Temp = Temp2;
+						}
 
-			else
-				Ranking[i]->Name = (char*)"***";
+						else
+							Ranking[j]->Total = Temp;
+					}
+
+					Ranking[i]->Total = _System->RScore.Total;
+					
+					Ranking[i]->Name = SetName();
+					_System->PlayerNameInput = 1;
+					
+					break;
+				}
+				else
+				{
+					Ranking[i]->Name = (char*)"***";
+				}
+			}
 		}
 
 		Height = 7.0f;
 
 		for (int i = 0; i < 10; ++i)
 		{
-			OnDrawText((char*)"1st", Width + 5.0f, Height + i);
+			OnDrawText(i, Width - (5.0f+strlen("st")), Height + i);
+			OnDrawText((char*)"st", Width - 5.0f, Height + i);
 			OnDrawText(Ranking[i]->Total, Width, Height + i);
 			OnDrawText(Ranking[i]->Name, Width + strlen("_______  _____  _______ _______       "), Height + i);
 		}
 	}
 
+	else if (_System->TimeInfo.ShowRanking >= 20 && 
+		_System->TimeInfo.ShowRanking < 40)
+	{
+		_System->TimeInfo.ShowRanking++;
+		Width = GetMidleWidth((char*)",---.|                    '|");
+                            
+		OnDrawText((char*)",---.|                    '|", Width, Height);
+		OnDrawText((char*)"`---.|--- ,---.,---.,---.  |", Width, Height + 1.0f);
+		OnDrawText((char*)"    ||    ,---||   ||---'  |", Width, Height + 2.0f);
+		OnDrawText((char*)"`---'`---'`---^`---|`---'  `", Width, Height + 3.0f);
+		OnDrawText((char*)"               `---'        ", Width, Height + 4.0f);
+
+		if (_System->PlayerNameInput = 1)
+		{
+			for (int i = 0; i < 10; ++i)
+			{
+				for (int j = 0; j < 10; ++j)
+				{
+					if (Ranking[i]->Stage1 > Ranking[j]->Stage1)
+					{
+						int Temp = Ranking[j]->Stage1;
+						Ranking[j]->Stage1 = Ranking[i]->Stage1;
+						Ranking[i]->Stage1 = Temp;
+					}
+				}
+			}
+			
+			for (int i = 0; i < 10; ++i)
+			{
+				if (Ranking[i]->Stage1 < _System->RScore.Stage1)
+				{
+					int Temp = Ranking[i]->Stage1;
+					for (int j = 0; j < 10; ++j)
+					{
+						if (Temp > Ranking[j]->Stage1)
+						{
+							int Temp2 = Ranking[j]->Stage1;
+							Ranking[j]->Stage1 = Temp;
+							Temp = Temp2;
+						}
+
+						else
+							Ranking[j]->Stage1 = Temp;
+					}
+					Ranking[i]->Stage1 = _System->RScore.Stage1;
+					
+					Ranking[i]->Name = SetName();
+					_System->PlayerNameInput = 0;
+					break;
+				}
+				else
+				{
+					Ranking[i]->Name = (char*)"***";
+				}
+			}
+		}
+
+		Height = 7.0f;
+
+		for (int i = 0; i < 10; ++i)
+		{
+			OnDrawText(i, Width - (5.0f + strlen("st")), Height + i);
+			OnDrawText((char*)"st", Width - 5.0f, Height + i);
+			OnDrawText(Ranking[i]->Stage1, Width, Height + i);
+			OnDrawText(Ranking[i]->Name, Width + strlen(",---.|                    '|"), Height + i);
+		}
+	}
+
+	else if (_System->TimeInfo.ShowRanking >= 40 &&
+		_System->TimeInfo.ShowRanking < 60)
+	{
+		_System->TimeInfo.ShowRanking++;
+		Width = GetMidleWidth((char*)",---.|                   ,--.");
+
+		OnDrawText((char*)",---.|                   ,--.", Width, Height);
+		OnDrawText((char*)"`---.|--- ,---.,---.,---.,--'", Width, Height + 1.0f);
+		OnDrawText((char*)"    ||    ,---||   ||---'|   ", Width, Height + 2.0f);
+		OnDrawText((char*)"`---'`---'`---^`---|`---'`--'", Width, Height + 3.0f);
+		OnDrawText((char*)"               `---'         ", Width, Height + 4.0f);
+
+		if (_System->PlayerNameInput == 0)
+		{
+			for (int i = 0; i < 10; ++i)
+			{
+				for (int j = 0; j < 10; ++j)
+				{
+					if (Ranking[i]->Stage2 > Ranking[j]->Stage2)
+					{
+						int Temp = Ranking[j]->Stage2;
+						Ranking[j]->Stage2 = Ranking[i]->Stage2;
+						Ranking[i]->Stage2 = Temp;
+					}
+				}
+			}
+		
+			for (int i = 0; i < 10; ++i)
+			{
+				if (Ranking[i]->Stage2 < _System->RScore.Stage2)
+				{
+					int Temp = Ranking[i]->Stage2;
+					for (int j = 0; j < 10; ++j)
+					{
+						if (Temp > Ranking[j]->Stage2)
+						{
+							int Temp2 = Ranking[j]->Stage2;
+							Ranking[j]->Stage2 = Temp;
+							Temp = Temp2;
+						}
+
+						else
+							Ranking[j]->Stage2 = Temp;
+					}
+
+					Ranking[i]->Stage2 = _System->RScore.Stage2;
+					Ranking[i]->Name = SetName();
+					_System->PlayerNameInput = 1;
+					break;
+				}
+				else
+				{
+					Ranking[i]->Name = (char*)"***";
+				}
+			}
+		}
+		Height = 7.0f;
+
+		for (int i = 0; i < 10; ++i)
+		{
+			OnDrawText(i, Width - (5.0f + strlen("st")), Height + i);
+			OnDrawText((char*)"st", Width - 5.0f, Height + i);
+			OnDrawText(Ranking[i]->Stage2, Width, Height + i);
+			OnDrawText(Ranking[i]->Name, Width + strlen(",---.|                   ,--."), Height + i);
+		}
+	}
+
+	else if (_System->TimeInfo.ShowRanking >= 60 &&
+	_System->TimeInfo.ShowRanking < 80)
+	{
+		_System->TimeInfo.ShowRanking++;
+		Width = GetMidleWidth((char*)",---.|                   ,--.");
+		                             
+		OnDrawText((char*)",---.|                   ,--.", Width, Height);
+		OnDrawText((char*)"`---.|--- ,---.,---.,---.  -|", Width, Height + 1.0f);
+		OnDrawText((char*)"    ||    ,---||   ||---'   |", Width, Height + 2.0f);
+		OnDrawText((char*)"`---'`---'`---^`---|`---'`--'", Width, Height + 3.0f);
+		OnDrawText((char*)"               `---'         ", Width, Height + 4.0f);
+
+		if (_System->PlayerNameInput == 1)
+		{
+			for (int i = 0; i < 10; ++i)
+			{
+				for (int j = 0; j < 10; ++j)
+				{
+					if (Ranking[i]->Stage3 > Ranking[j]->Stage3)
+					{
+						int Temp = Ranking[j]->Stage3;
+						Ranking[j]->Stage3 = Ranking[i]->Stage3;
+						Ranking[i]->Stage3 = Temp;
+					}
+				}
+			}
+			
+			for (int i = 0; i < 10; ++i)
+			{
+				if (Ranking[i]->Stage3 < _System->RScore.Stage3)
+				{
+					int Temp = Ranking[i]->Stage3;
+					for (int j = 0; j < 10; ++j)
+					{
+						if (Temp > Ranking[j]->Stage3)
+						{
+							int Temp2 = Ranking[j]->Stage3;
+							Ranking[j]->Stage3 = Temp;
+							Temp = Temp2;
+						}
+
+						else
+							Ranking[j]->Stage3 = Temp;
+					}
+					Ranking[i]->Stage3 = _System->RScore.Stage3;
+					Ranking[i]->Name = SetName();
+					_System->PlayerNameInput = 0;
+					break;
+				}
+				else
+				{
+					Ranking[i]->Name = (char*)"***";
+				}
+			}
+		}
+
+		Height = 7.0f;
+
+		for (int i = 0; i < 10; ++i)
+			{
+				OnDrawText(i, Width - (5.0f + strlen("st")), Height + i);
+				OnDrawText((char*)"st", Width - 5.0f, Height + i);
+				OnDrawText(Ranking[i]->Stage3, Width, Height + i);
+				OnDrawText(Ranking[i]->Name, Width + strlen(",---.|                   ,--."), Height + i);
+			}
+	}
+
+	else if (_System->TimeInfo.ShowRanking >= 80 &&
+		_System->TimeInfo.ShowRanking < 100)
+	{
+		_System->TimeInfo.ShowRanking++;
+		Width = GetMidleWidth((char*)", -- - .|                   |  |");
+
+		OnDrawText((char*)",---.|                   |  |", Width, Height);
+		OnDrawText((char*)"`---.|--- ,---.,---.,---.`--|", Width, Height + 1.0f);
+		OnDrawText((char*)"    ||    ,---||   ||---'   |", Width, Height + 2.0f);
+		OnDrawText((char*)"`---'`---'`---^`---|`---'   `", Width, Height + 3.0f);
+		OnDrawText((char*)"               `---'         ", Width, Height + 4.0f);
+		if (_System->PlayerNameInput == 0)
+		{
+			for (int i = 0; i < 10; ++i)
+			{
+				for (int j = 0; j < 10; ++j)
+				{
+					if (Ranking[i]->Stage4 > Ranking[j]->Stage4)
+					{
+						int Temp = Ranking[j]->Stage4;
+						Ranking[j]->Stage4 = Ranking[i]->Stage4;
+						Ranking[i]->Stage4 = Temp;
+					}
+				}
+			}
+
+			for (int i = 0; i < 10; ++i)
+			{
+				if (Ranking[i]->Stage4 < _System->RScore.Stage4)
+				{
+					int Temp = Ranking[i]->Stage4;
+					for (int j = 0; j < 10; ++j)
+					{
+						if (Temp > Ranking[j]->Stage4)
+						{
+							int Temp2 = Ranking[j]->Stage4;
+							Ranking[j]->Stage4 = Temp;
+							Temp = Temp2;
+						}
+
+						else
+							Ranking[j]->Stage4 = Temp;
+					}
+					Ranking[i]->Stage4 = _System->RScore.Stage4;
+					Ranking[i]->Name = SetName();
+					_System->PlayerNameInput = 1;
+					break;
+				}
+				else
+				{
+					Ranking[i]->Name = (char*)"***";
+				}
+			}
+		}
+		Height = 7.0f;
+
+		for (int i = 0; i < 10; ++i)
+		{
+			OnDrawText(i, Width - (5.0f + strlen("st")), Height + i);
+			OnDrawText((char*)"st", Width - 5.0f, Height + i);
+			OnDrawText(Ranking[i]->Stage4, Width, Height + i);
+			OnDrawText(Ranking[i]->Name, Width + strlen(", -- - .|                   |  |"), Height + i);
+		}
+	}
+
+	else if (_System->TimeInfo.ShowRanking >= 100 &&
+	_System->TimeInfo.ShowRanking < 120)
+	{
+		_System->TimeInfo.ShowRanking++;
+		Width = GetMidleWidth((char*)",---.|                   ---.");
+		                             
+		OnDrawText((char*)",---.|                   ---.", Width, Height);
+		OnDrawText((char*)"`---.|--- ,---.,---.,---.`--.", Width, Height + 1.0f);
+		OnDrawText((char*)"    ||    ,---||   ||---'   |", Width, Height + 2.0f);
+		OnDrawText((char*)"`---'`---'`---^`---|`---'`--'", Width, Height + 3.0f);
+		OnDrawText((char*)"               `---'         ", Width, Height + 4.0f);
+
+		if (_System->PlayerNameInput == 1)
+		{
+		for (int i = 0; i < 10; ++i)
+		{
+			for (int j = 0; j < 10; ++j)
+			{
+				if (Ranking[i]->Stage5 > Ranking[j]->Stage5)
+				{
+					int Temp = Ranking[j]->Stage5;
+					Ranking[j]->Stage5 = Ranking[i]->Stage5;
+					Ranking[i]->Stage5 = Temp;
+				}
+			}
+		}
+		
+			for (int i = 0; i < 10; ++i)
+			{
+				if (Ranking[i]->Stage5 < _System->RScore.Stage5)
+				{
+					int Temp = Ranking[i]->Stage5;
+					for (int j = 0; j < 10; ++j)
+					{
+						if (Temp > Ranking[j]->Stage5)
+						{
+							int Temp2 = Ranking[j]->Stage5;
+							Ranking[j]->Stage4 = Temp;
+							Temp = Temp2;
+						}
+
+						else
+							Ranking[j]->Stage5 = Temp;
+					}
+					Ranking[i]->Stage5 = _System->RScore.Stage5;
+					Ranking[i]->Name = SetName();
+					_System->PlayerNameInput = 0;
+					break;
+				}
+				else
+				{
+					Ranking[i]->Name = (char*)"***";
+				}
+			}
+		}
+
+		Height = 7.0f;
+
+		for (int i = 0; i < 10; ++i)
+		{
+			OnDrawText(i, Width - (5.0f + strlen("st")), Height + i);
+			OnDrawText((char*)"st", Width - 5.0f, Height + i);
+			OnDrawText(Ranking[i]->Stage5, Width, Height + i);
+			OnDrawText(Ranking[i]->Name, Width + strlen(",---.|                   ---."), Height + i);
+		}
+	}
+
 	else
+	{
 		_System->Scene_State = Scene_Logo;
+		_System->TimeInfo.ShowRanking = 0;
+	}
 }
 
 void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
@@ -888,7 +1259,6 @@ void StageClear(Object* Player, Object* PBullet[], System* _System)
 	case 0:
 		_System->RScore.Stage1 = _System->Score;
 		_System->RScore.Total += _System->Score;
-
 		break;
 	case 1:
 		_System->RScore.Stage2 = _System->Score;
@@ -1125,6 +1495,7 @@ void ResetSystem(Object* Player, Object* PBullet[], System* _System)
 	Player->TransInfo.Position.x = 40.0f;
 	Player->TransInfo.Position.y = 52.0f;
 }
+
 
 bool Collision(Object* ObjectA, Object* ObjectB)
 {
@@ -1389,56 +1760,28 @@ void ShowUI(Object* Player, System * _System)
 		OnDrawText((char*) "Max", Width + (float)strlen("Power Lv."), 50.0f);
 	else
 		OnDrawText(Player->Power, Width + (float)strlen("Power Lv."), 50.0f);
-
-	switch (Player->Power)
-	{
-	case 1 :
-		OnDrawText((char*)"□□□", Width + 20, 51.0f, 6);
-		OnDrawText((char*)"□□□□□□", Width + 14, 52.0f, 6);
-		OnDrawText((char*)"□□□□□□□□", Width + 10, 53.0f, 6);
-		break;
-	case 2:
-		OnDrawText((char*)"□□□", Width + 20, 51.0f, 6);
-		OnDrawText((char*)"□□□□□□", Width + 14, 52.0f, 6);
-		OnDrawText((char*)"■□□□□□□□", Width + 10, 53.0f, 6);
-		break;
-	case 3:
-		OnDrawText((char*)"□□□", Width + 20, 51.0f, 6);
-		OnDrawText((char*)"□□□□□□", Width + 14, 52.0f, 6);
-		OnDrawText((char*)"■■□□□□□□", Width + 10, 53.0f, 6);
-		break;
-	case 4:
-		OnDrawText((char*)"□□□", Width + 20, 51.0f, 6);
-		OnDrawText((char*)"■□□□□□", Width + 14, 52.0f, 6);
-		OnDrawText((char*)"■■■□□□□□", Width + 10, 53.0f, 6);
-		break;
-	case 5:
-		OnDrawText((char*)"□□□", Width + 20, 51.0f, 6);
-		OnDrawText((char*)"■■□□□□", Width + 14, 52.0f, 6);
-		OnDrawText((char*)"■■■■□□□□", Width + 10, 53.0f, 6);
-		break;
-	case 6:
-		OnDrawText((char*)"□□□", Width + 20, 51.0f, 6);
-		OnDrawText((char*)"■■■□□□", Width + 14, 52.0f, 6);
-		OnDrawText((char*)"■■■■■□□□", Width + 10, 53.0f, 6);
-		break;
-	case 7:
-		OnDrawText((char*)"■□□", Width + 20, 51.0f, 6);
-		OnDrawText((char*)"■■■■□□", Width + 14, 52.0f, 6);
-		OnDrawText((char*)"■■■■■■□□", Width + 10, 53.0f, 6);
-		break;
-	case 8:
-		OnDrawText((char*)"■■□", Width + 20, 51.0f, 6);
-		OnDrawText((char*)"■■■■■□", Width + 14, 52.0f, 6);
-		OnDrawText((char*)"■■■■■■■□", Width + 10, 53.0f, 6);
-		break;
-	case 9:
-		OnDrawText((char*)"■■■", Width + 20, 51.0f, 6);
-		OnDrawText((char*)"■■■■■■", Width + 14, 52.0f, 6);
-		OnDrawText((char*)"■■■■■■■■", Width + 10, 53.0f, 6);
-		break;
-	}
 	
+	for (int i = 0; i < 6; i+=2)
+	{
+		if (i/2 >= Player->Power - 5)
+			OnDrawText((char*)"□", Width + 20.0f + (float)i, 51.0f, 6);
+		else
+			OnDrawText((char*)"■", Width + 10.0f + (float)i, 51.0f, 6);
+	}
+	for (int i = 0; i < 12; i+=2)
+	{
+		if (i/2 >= Player->Power - 3)
+			OnDrawText((char*)"□", Width + 14.0f + (float)i, 52.0f, 6);
+		else
+			OnDrawText((char*)"■", Width + 10.0f + (float)i, 52.0f, 6);
+	}
+	for (int i = 0; i < 16; i+=2)
+	{
+		if(i/2 >= Player->Power-1)
+			OnDrawText((char*)"□", Width + 10.0f + (float)i, 53.0f, 6);
+		else
+			OnDrawText((char*)"■", Width + 10.0f + (float)i, 53.0f, 6);
+	}
 }
 
 void HideCursor(bool _Visible)
