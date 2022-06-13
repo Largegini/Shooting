@@ -34,6 +34,7 @@ struct Object
 	int Power;
 	int HP;
 	int MaxHP;
+	int Charge;
 	
 	Information Info;
 	Transform TransInfo;
@@ -80,6 +81,7 @@ struct System
 	int StageNum = 0;
 	int Score = 0;
 	
+	bool Check = false;
 	RecordScore RScore;
 	TimeInfomation TimeInfo;
 };
