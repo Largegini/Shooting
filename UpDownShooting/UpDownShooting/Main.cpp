@@ -43,6 +43,7 @@ int main(void)
 
 	Object* Player = new Object;
 	Initialize(Player, (char*)"▲", 10, 10, 40.0f, 52.0f);
+	Player->Info.Color = 11;
 
 	Object* Enemy[32];
 	for (int i = 0; i < 32; ++i)
@@ -52,8 +53,8 @@ int main(void)
 		for (int i = 0; i < 32; ++i)
 			Destination[i] = nullptr;
 
-	Object* PBullet[128];
-	for (int i = 0; i < 128; ++i)
+	Object* PBullet[256];
+	for (int i = 0; i < 256; ++i)
 		PBullet[i] = nullptr;
 
 	Object* Item[16];
@@ -79,7 +80,9 @@ int main(void)
 
 	HideCursor(false);
 	//테스트용
+	Player->Power = 7;
 	SystemInfo->ClearStage = 4;
+
 	while (true)
 	{
 		if (Time + 100 < GetTickCount64())

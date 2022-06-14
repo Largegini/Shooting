@@ -45,6 +45,7 @@ void Initialize(RecordScore* Ranking, char* _Name, const int _Total,
 	const int _Stage1, const int _Stage2, const int _Stage3,
 	const int _Stage4, const int _Stage5);
 void ResetSystem(Object* Player, Object* PBullet[], System* _System);
+void ChargeAttackBullet(Object* Player, Object* PBullet[], TimeInfomation* _Time);
 
 bool Collision(Object* ObjectA, Object* ObjectB);
 char* SetName();
@@ -493,7 +494,7 @@ void ShowRanking(RecordScore* Ranking[], System* _System)
 		OnDrawText((char*)"`---'`---'`---^`---|`---'  `", Width, Height + 3.0f);
 		OnDrawText((char*)"               `---'        ", Width, Height + 4.0f);
 
-		if (_System->PlayerNameInput = 1)
+		if (_System->PlayerNameInput == 1)
 		{
 			for (int i = 0; i < 10; ++i)
 			{
@@ -832,45 +833,55 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 	// 스페이스바를 눌렀을 때 총알 생성
 	if (!_System->Check && GetAsyncKeyState(VK_SPACE) & 0x0001)
 	{
-		for (int i = 0; i < 128; ++i)
+		for (int i = 0; i < 256; ++i)
 		{
 			if (PBullet[i] == nullptr)
 			{
-				PBullet[i] = CreateBullet(Player->TransInfo.Position.x,
-					Player->TransInfo.Position.y, Player->Power,
-					0);
-				break;
-			}
-		}
-		_System->Check = true;
-	}
-	if (GetAsyncKeyState(VK_SPACE) & 0x8000)
-	{
-		if (Player->Charge < 10)
-			Player->Charge++;
-	}
-	if (_System->Check && !GetAsyncKeyState(VK_SPACE) & 0x8000)
-	{
-		if (Player->Charge >= 10)
-		{
-			for (int i = 0; i < 128; ++i)
-			{
-				if (PBullet[i] == nullptr)
+				if (Player->Power < 4)
 				{
 					PBullet[i] = CreateBullet(Player->TransInfo.Position.x,
-						Player->TransInfo.Position.y, 1, 0);
-					for (int j = 0; j < 128; ++j)
+						Player->TransInfo.Position.y, (Player->Power % 3),
+						0);
+					break;
+				}
+
+				else if (Player->Power >= 4 && Player->Power < 7)
+				{
+					PBullet[i] = CreateBullet(Player->TransInfo.Position.x-2,
+						Player->TransInfo.Position.y, (Player->Power % 3),
+						0);
+					for (int j = 0; j < 256; ++j)
 					{
 						if (PBullet[j] == nullptr)
 						{
 							PBullet[j] = CreateBullet(Player->TransInfo.Position.x+2,
-								Player->TransInfo.Position.y, 1, 0);
-							for (int k = 0; k < 128; ++k)
+								Player->TransInfo.Position.y, (Player->Power % 3),
+								0);
+							break;
+						}
+					}
+					break;
+				}
+
+				else if (Player->Power >= 7 && Player->Power < 10)
+				{
+					PBullet[i] = CreateBullet(Player->TransInfo.Position.x - 2,
+						Player->TransInfo.Position.y, (Player->Power % 3),
+						0);
+					for (int j = 0; j < 256; ++j)
+					{
+						if (PBullet[j] == nullptr)
+						{
+							PBullet[j] = CreateBullet(Player->TransInfo.Position.x + 2,
+								Player->TransInfo.Position.y, (Player->Power % 3),
+								0);
+							for (int k = 0; k < 256; ++k)
 							{
 								if (PBullet[k] == nullptr)
 								{
-									PBullet[k] = CreateBullet(Player->TransInfo.Position.x-2,
-										Player->TransInfo.Position.y, Player->Power, 0);
+									PBullet[k] = CreateBullet(Player->TransInfo.Position.x,
+										Player->TransInfo.Position.y, (Player->Power % 3),
+										0);
 									break;
 								}
 							}
@@ -881,7 +892,30 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 				}
 			}
 		}
+		_System->Check = true;
 	}
+	if (GetAsyncKeyState(VK_SPACE) & 0x8000)
+	{
+		if (Player->Charge.Stack < 10 && !Player->Charge.Check)
+			Player->Charge.Stack++;
+		if (Player->Charge.Stack >= 10)
+			Player->Info.Color = 15;
+	}
+	if (_System->Check && !(GetAsyncKeyState(VK_SPACE) & 0x8000))
+	{
+		if (Player->Charge.Stack >= 10)
+		{
+			Player->Charge.Check = true;
+			Player->Charge.TransInfo.Position.x = Player->TransInfo.Position.x;
+			Player->Charge.TransInfo.Position.y = Player->TransInfo.Position.y - 1;
+			Player->Info.Color = 11;
+		}
+		Player->Charge.Stack = 0;
+		_System->Check = false;
+	}
+
+	ChargeAttackBullet(Player, PBullet, TimeInfo);
+
 	//플레이어 조작
 	UpdateInput(Player);
 	// 스테이지내 정보 출력
@@ -911,7 +945,7 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 	}
 	// 플레이어 출력
 	OnDrawText(Player->Info.Texture, Player->TransInfo.Position.x,
-		Player->TransInfo.Position.y, 11);
+		Player->TransInfo.Position.y, Player->Info.Color);
 	// 적 출력
 	for (int i = 0; i < 32; ++i)
 	{
@@ -926,7 +960,7 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 		}
 	}
 	// 총알 출력
-	for (int i = 0; i < 128; ++i)
+	for (int i = 0; i < 256; ++i)
 	{
 		if (PBullet[i])
 		{
@@ -974,7 +1008,7 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 		}
 	}
 	// 화면 밖으로 나간 총알 삭제
-	for (int i = 0; i < 128; ++i)
+	for (int i = 0; i < 256; ++i)
 	{
 		if (PBullet[i])
 		{
@@ -986,7 +1020,6 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 				delete PBullet[i];
 				PBullet[i] = nullptr;
 				TimeInfo->EBHomingTime[i] = 0;
-				break;
 			}
 		}
 	}
@@ -1008,7 +1041,7 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 	}
 	// 적이 쏜 총알 이 플레이어에게 적중했을 때 
 	// 플레이어 체력감소와 적 총알 삭제
-	for (int i = 0; i < 128; ++i)
+	for (int i = 0; i < 256; ++i)
 	{
 		if (PBullet[i] != nullptr && PBullet[i]->Info.Option > 0)
 		{
@@ -1018,12 +1051,11 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 				PBullet[i] = nullptr;
 				Player->HP--;
 				TimeInfo->EBHomingTime[i] = 0;
-				break;
 			}
 		}
 	}
 	// 플레이어의 총알이 적에게 적중 했을 때 확률적으로 아이템 생성
-	for (int i = 0; i < 128; ++i)
+	for (int i = 0; i < 256; ++i)
 	{
 		if (PBullet[i] != nullptr)
 		{
@@ -1041,7 +1073,6 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 								if (Item[k] == nullptr)
 									Item[k] = CreateItem(Enemy[j]->TransInfo.Position.x,
 										Enemy[j]->TransInfo.Position.y);
-								break;
 							}
 
 						}
@@ -1052,7 +1083,7 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 	
 	}
 	// 플레이어의 총알이 적에게 적중 했을 때 적 삭제와 추가점수 획득
-	for (int i = 0; i < 128; ++i)
+	for (int i = 0; i < 256; ++i)
 	{
 		if (PBullet[i] != nullptr && PBullet[i]->Info.Option == 0)
 		{
@@ -1075,7 +1106,6 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 							_System->PlayerKill--;
 							_System->Score += 10;
 						}
-						break;
 					}
 				}
 			}
@@ -1116,7 +1146,6 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 			{
 				delete Item[i];
 				Item[i] = nullptr;
-				break;
 			}
 		}
 	}
@@ -1296,36 +1325,6 @@ void StageClear(Object* Player, Object* PBullet[], System* _System)
 	float Width = GetMidleWidth((char*)" _______  _______  _______  _______  _______    _______  ___      _______  _______  ______    __   __ ");
 	float Height = 20;
 
-	
-
-	switch (_System->ClearStage)
-	{
-	case 0:
-		_System->RScore.Stage1 = _System->Score;
-		_System->RScore.Total += _System->Score;
-		break;
-	case 1:
-		_System->RScore.Stage2 = _System->Score;
-		_System->RScore.Total += _System->Score;
-		break;
-	case 2:
-		_System->RScore.Stage3 = _System->Score;
-		_System->RScore.Total += _System->Score;
-		break;
-	case 3:
-		_System->RScore.Stage4 = _System->Score;
-		_System->RScore.Total += _System->Score;
-		break;
-	case 4:
-		_System->RScore.Stage5 = _System->Score;
-		_System->RScore.Total += _System->Score;
-		break;
-	}
-
-	++_System->ClearStage;
-
-	ResetSystem(Player, PBullet, _System);
-
 	OnDrawText((char*) " _______  _______  _______  _______  _______    _______  ___      _______  _______  ______    __   __ ", Width, Height, 14);
 	OnDrawText((char*) "|       ||       ||   _   ||       ||       |  |       ||   |    |       ||   _   ||    _ |  |  | |  |", Width, Height+1.0f, 14);
 	OnDrawText((char*) "|  _____||_     _||  |_|  ||    ___||    ___|  |       ||   |    |    ___||  |_|  ||   | ||  |  | |  |", Width, Height+2.0f, 14);
@@ -1333,6 +1332,50 @@ void StageClear(Object* Player, Object* PBullet[], System* _System)
 	OnDrawText((char*) "|_____  |  |   |  |       ||   ||  ||    ___|  |      _||   |___ |    ___||       ||    __  ||__| |__|", Width, Height+4.0f, 14);
 	OnDrawText((char*) " _____| |  |   |  |   _   ||   |_| ||   |___   |     |_ |       ||   |___ |   _   ||   |  | | __   __ ", Width, Height+5.0f, 14);
 	OnDrawText((char*) "|_______|  |___|  |__| |__||_______||_______|  |_______||_______||_______||__| |__||___|  |_||__| |__|", Width, Height+6.0f, 14);
+
+
+	OnDrawText((char*)"kill", Width, Height, 14);
+	OnDrawText(_System->Score, Width + 15.0f, Height, 14);
+	OnDrawText((char*)"Life", Width, Height+1, 14);
+	OnDrawText(Player->HP, Width + 10.0f, Height+1, 14);
+	OnDrawText(Player->HP*10, Width + 15.0f, Height+1, 14);
+	OnDrawText((char*)"%", Width + 18.0f, Height + 1, 14);
+	OnDrawText(Player->Fuel, Width + 10.0f, Height + 2, 14);
+	OnDrawText(Player->Fuel, Width + 15.0f, Height+2, 14);
+	OnDrawText((char*)"%", Width + 18.0f, Height + 2, 14);
+
+	switch (_System->ClearStage)
+	{
+	case 0:
+		_System->Score += _System->Score * (float)((Player->HP / 10)+(Player->Fuel/100));
+		_System->RScore.Stage1 = _System->Score;
+		_System->RScore.Total += _System->Score;
+		break;
+	case 1:
+		_System->Score += _System->Score * (float)((Player->HP / 10) + (Player->Fuel / 100));
+		_System->RScore.Stage2 = _System->Score;
+		_System->RScore.Total += _System->Score;
+		break;
+	case 2:
+		_System->Score += _System->Score * (float)((Player->HP / 10) + (Player->Fuel / 100));
+		_System->RScore.Stage3 = _System->Score;
+		_System->RScore.Total += _System->Score;
+		break;
+	case 3:
+		_System->Score += _System->Score * (float)((Player->HP / 10) + (Player->Fuel / 100));
+		_System->RScore.Stage4 = _System->Score;
+		_System->RScore.Total += _System->Score;
+		break;
+	case 4:
+		_System->Score += _System->Score * (float)((Player->HP / 10) + (Player->Fuel / 100));
+		_System->RScore.Stage5 = _System->Score;
+		_System->RScore.Total += _System->Score;
+		break;
+	}
+
+	++_System->ClearStage;
+	ResetSystem(Player, PBullet, _System);
+
 	Sleep(2000);
 }
 
@@ -1417,7 +1460,7 @@ void StageSet(Object* Player, Object* Enemy[], Object* PBullet[],
 
 		if (Enemy[_System->RandNum] != nullptr)
 		{
-			for (int i = 0; i < 128; ++i)
+			for (int i = 0; i < 256; ++i)
 			{
 				if (PBullet[i] == nullptr)
 				{
@@ -1499,6 +1542,7 @@ void Initialize(Object* _Object, char* _Texture, const int _MaxHP,
 	_Object->Power = 1;
 	_Object->MaxHP = _MaxHP;
 	_Object->HP = _HP;
+	_Object->Fuel = 100;
 
 	_Object->TransInfo.Position = Vector3 (_PosX, _PosY, _PosZ);
 	_Object->TransInfo.Rotation = Vector3 (0, 0, 0);
@@ -1525,7 +1569,7 @@ void ResetSystem(Object* Player, Object* PBullet[], System* _System)
 	_System->StageNum = 0;
 	_System->Score = 0;
 
-	for (int i = 0; i < 128; ++i)
+	for (int i = 0; i < 256; ++i)
 	{
 		if (PBullet[i] != nullptr)
 		{
@@ -1538,6 +1582,54 @@ void ResetSystem(Object* Player, Object* PBullet[], System* _System)
 	Player->HP = Player->MaxHP;
 	Player->TransInfo.Position.x = 40.0f;
 	Player->TransInfo.Position.y = 52.0f;
+}
+
+void ChargeAttackBullet(Object* Player , Object * PBullet[], TimeInfomation* _Time)
+{
+	if (Player->Charge.Check)
+	{
+		if (_Time->ChargeAttackTime % 3 == 0)
+		{
+			for (int i = 0; i < 256; ++i)
+			{
+				if (PBullet[i] == nullptr)
+				{
+					PBullet[i] = CreateBullet(Player->Charge.TransInfo.Position.x,
+						Player->Charge.TransInfo.Position.y - 1, 1, 0);
+					for (int j = 0; j < 256; ++j)
+					{
+						if (PBullet[j] == nullptr)
+						{
+							PBullet[j] = CreateBullet(Player->Charge.TransInfo.Position.x + 2,
+								Player->Charge.TransInfo.Position.y, 1, 0);
+
+							for (int k = 0; k < 256; ++k)
+							{
+								if (PBullet[k] == nullptr)
+								{
+									PBullet[k] = CreateBullet(Player->Charge.TransInfo.Position.x - 2,
+										Player->Charge.TransInfo.Position.y, 1, 0);
+									break;
+								}
+							}
+
+							break;
+						}
+					}
+					break;
+				}
+			}
+		}
+		_Time->ChargeAttackTime++;
+		OnDrawText((char*)"‡", Player->Charge.TransInfo.Position.x,
+			Player->Charge.TransInfo.Position.y + 1);
+	}
+
+	if (_Time->ChargeAttackTime > 30)
+	{
+		Player->Charge.Check = false;
+		_Time->ChargeAttackTime = 0;
+	}
 }
 
 
@@ -1610,40 +1702,10 @@ Object* CreateBullet(const float _x, const float _y, const int _Power,
 		_Object->Info.Option = 0;
 		_Object->Power = 2;
 		break;
-	case 3:
+	case 0:
 		Initialize(_Object, (char*)"★", 0, 0, (float)_x, (float)_y, 11);
 		_Object->Info.Option = 0;
 		_Object->Power = 3;
-		break;
-	case 4:
-		Initialize(_Object, (char*)"●●", 0, 0, (float)_x, (float)_y, 11);
-		_Object->Info.Option = 0;
-		_Object->Power = 2;
-		break;
-	case 5:
-		Initialize(_Object, (char*)"♠♠", 0, 0, (float)_x, (float)_y, 11);
-		_Object->Info.Option = 0;
-		_Object->Power = 4;
-		break;
-	case 6:
-		Initialize(_Object, (char*)"★★", 0, 0, (float)_x, (float)_y, 11);
-		_Object->Info.Option = 0;
-		_Object->Power = 6;
-		break;
-	case 7:
-		Initialize(_Object, (char*)"●●●", 0, 0, (float)_x, (float)_y, 11);
-		_Object->Info.Option = 0;
-		_Object->Power = 3;
-		break;
-	case 8:
-		Initialize(_Object, (char*)"♠♠♠", 0, 0, (float)_x, (float)_y, 11);
-		_Object->Info.Option = 0;
-		_Object->Power = 6;
-		break;
-	case 9:
-		Initialize(_Object, (char*)"★★★", 0, 0, (float)_x, (float)_y, 11);
-		_Object->Info.Option = 0;
-		_Object->Power = 9;
 		break;
 	}
 
@@ -1821,17 +1883,17 @@ void ShowUI(Object* Player, System * _System)
 	
 	for (int i = 0; i < 6; i+=2)
 	{
-		if (i/2 >= Player->Power - 5)
+		if (i/2 >= Player->Power - 6)
 			OnDrawText((char*)"□", Width + 20.0f + (float)i, 51.0f, 6);
 		else
-			OnDrawText((char*)"■", Width + 10.0f + (float)i, 51.0f, 6);
+			OnDrawText((char*)"■", Width + 20.0f + (float)i, 51.0f, 6);
 	}
 	for (int i = 0; i < 12; i+=2)
 	{
 		if (i/2 >= Player->Power - 3)
 			OnDrawText((char*)"□", Width + 14.0f + (float)i, 52.0f, 6);
 		else
-			OnDrawText((char*)"■", Width + 10.0f + (float)i, 52.0f, 6);
+			OnDrawText((char*)"■", Width + 14.0f + (float)i, 52.0f, 6);
 	}
 	for (int i = 0; i < 16; i+=2)
 	{

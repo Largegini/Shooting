@@ -28,16 +28,26 @@ struct Information
 	float MoveY = 1.0f;
 };
 
+struct ChargeInfo
+{
+	int Stack = 0;
+
+	bool Check = false;
+
+	Transform TransInfo;
+};
+
 struct Object
 {
 
 	int Power;
 	int HP;
 	int MaxHP;
-	int Charge;
-	
+	int Fuel;
+
 	Information Info;
 	Transform TransInfo;
+	ChargeInfo Charge;
 };
 
 struct  DrawTextInfo
@@ -63,6 +73,7 @@ struct TimeInfomation
 	int Result = 0;
 	int EndTime = 0;
 	int ShowRanking = 0;
+	int ChargeAttackTime = 0;
 
 	bool EnemyTime = false;
 	bool EBulletTime = false;
