@@ -65,6 +65,7 @@ struct RecordScore
 	int Stage3 = 0;
 	int Stage4 = 0;
 	int Stage5 = 0;
+	int Temp = 0;
 };
 
 struct TimeInfomation
@@ -74,6 +75,8 @@ struct TimeInfomation
 	int EndTime = 0;
 	int ShowRanking = 0;
 	int ChargeAttackTime = 0;
+	int UseFuel = 0;
+	int CountTime = 0;
 
 	bool EnemyTime = false;
 	bool EBulletTime = false;
@@ -91,8 +94,10 @@ struct System
 	int StageState = 0;
 	int StageNum = 0;
 	int Score = 0;
+	int Fuel = 0;
 	
 	bool Check = false;
+	bool Complete = false;
 	RecordScore RScore;
 	TimeInfomation TimeInfo;
 };

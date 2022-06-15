@@ -28,7 +28,8 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 	Object* Item[], Object* Destination[], Vector3 _Direction[],
 	Vector3 EDirection[], System* _System, TimeInfomation* TimeInfo);
 void ShowPlayStage(Object* Player, System* System);
-void StageClear(Object* Player, Object* PBullet[], System* _System);
+void StageClear(Object* Player, Object* PBullet[], System* _System,
+	TimeInfomation* TimeInfo);
 void StageSet(Object* Player, Object* Enemy[], Object* PBullet[],
 	Object* Destination[], Vector3 _Direction[], Vector3 EDirection[],
 	System* _System, TimeInfomation* TimeInfo);
@@ -49,6 +50,7 @@ void ChargeAttackBullet(Object* Player, Object* PBullet[], TimeInfomation* _Time
 
 bool Collision(Object* ObjectA, Object* ObjectB);
 char* SetName();
+int CaculationScore(Object* Player, System* _System, int Score);
 float GetMidleWidth(const char* _str);
 float GetDistance(const Object* ObjectA, const Object* ObjectB);
 
@@ -235,9 +237,11 @@ void Stage(Object* StageCursor, Object* Player, Object* Enemy[],
 			_System->Scene_State = Scene_End;
 		}
 		ShowPlayStage(Player, _System);
-		if(_System->StageNum >0)
+		if(_System->StageNum >0 && _System->StageNum < 3)
 			PlayStage(Player, Enemy, PBullet, Item, Destination, _Direction,
 			EDirection, _System, TimeInfo);
+		else if (_System->StageNum == 3)
+			StageClear(Player, PBullet, _System, TimeInfo);
 	}
 }
 
@@ -475,8 +479,22 @@ void ShowRanking(RecordScore* Ranking[], System* _System)
 
 		for (int i = 0; i < 10; ++i)
 		{
-			OnDrawText(i+1, Width - (5.0f+strlen("st")), Height + i);
-			OnDrawText((char*)"st", Width - 5.0f, Height + i);
+			OnDrawText(i + 1, Width - (5.0f+strlen("st")), Height + i);
+			switch (i)
+			{
+			case 0:
+				OnDrawText((char*)"st", Width - 5.0f, Height + i);
+				break;
+			case 1:
+				OnDrawText((char*)"nd", Width - 5.0f, Height + i);
+				break;
+			case 2 :
+				OnDrawText((char*)"rd", Width - 5.0f, Height + i);
+				break;
+			default :
+				OnDrawText((char*)"th", Width - 5.0f, Height + i);
+				break;
+			}
 			OnDrawText(Ranking[i]->Total, Width, Height + i);
 			OnDrawText(Ranking[i]->Name, Width + strlen("_______  _____  _______ _______       "), Height + i);
 		}
@@ -543,8 +561,22 @@ void ShowRanking(RecordScore* Ranking[], System* _System)
 
 		for (int i = 0; i < 10; ++i)
 		{
-			OnDrawText(i, Width - (5.0f + strlen("st")), Height + i);
-			OnDrawText((char*)"st", Width - 5.0f, Height + i);
+			OnDrawText(i + 1, Width - (5.0f + strlen("st")), Height + i);
+			switch (i)
+			{
+			case 0:
+				OnDrawText((char*)"st", Width - 5.0f, Height + i);
+				break;
+			case 1:
+				OnDrawText((char*)"nd", Width - 5.0f, Height + i);
+				break;
+			case 2:
+				OnDrawText((char*)"rd", Width - 5.0f, Height + i);
+				break;
+			default:
+				OnDrawText((char*)"th", Width - 5.0f, Height + i);
+				break;
+			}
 			OnDrawText(Ranking[i]->Stage1, Width, Height + i);
 			OnDrawText(Ranking[i]->Name, Width + strlen(",---.|                    '|"), Height + i);
 		}
@@ -610,8 +642,22 @@ void ShowRanking(RecordScore* Ranking[], System* _System)
 
 		for (int i = 0; i < 10; ++i)
 		{
-			OnDrawText(i, Width - (5.0f + strlen("st")), Height + i);
-			OnDrawText((char*)"st", Width - 5.0f, Height + i);
+			OnDrawText(i + 1, Width - (5.0f + strlen("st")), Height + i);
+			switch (i)
+			{
+			case 0:
+				OnDrawText((char*)"st", Width - 5.0f, Height + i);
+				break;
+			case 1:
+				OnDrawText((char*)"nd", Width - 5.0f, Height + i);
+				break;
+			case 2:
+				OnDrawText((char*)"rd", Width - 5.0f, Height + i);
+				break;
+			default:
+				OnDrawText((char*)"th", Width - 5.0f, Height + i);
+				break;
+			}
 			OnDrawText(Ranking[i]->Stage2, Width, Height + i);
 			OnDrawText(Ranking[i]->Name, Width + strlen(",---.|                   ,--."), Height + i);
 		}
@@ -677,8 +723,22 @@ void ShowRanking(RecordScore* Ranking[], System* _System)
 
 		for (int i = 0; i < 10; ++i)
 			{
-				OnDrawText(i, Width - (5.0f + strlen("st")), Height + i);
-				OnDrawText((char*)"st", Width - 5.0f, Height + i);
+				OnDrawText(i + 1, Width - (5.0f + strlen("st")), Height + i);
+				switch (i)
+				{
+				case 0:
+					OnDrawText((char*)"st", Width - 5.0f, Height + i);
+					break;
+				case 1:
+					OnDrawText((char*)"nd", Width - 5.0f, Height + i);
+					break;
+				case 2:
+					OnDrawText((char*)"rd", Width - 5.0f, Height + i);
+					break;
+				default:
+					OnDrawText((char*)"th", Width - 5.0f, Height + i);
+					break;
+				}
 				OnDrawText(Ranking[i]->Stage3, Width, Height + i);
 				OnDrawText(Ranking[i]->Name, Width + strlen(",---.|                   ,--."), Height + i);
 			}
@@ -742,8 +802,22 @@ void ShowRanking(RecordScore* Ranking[], System* _System)
 
 		for (int i = 0; i < 10; ++i)
 		{
-			OnDrawText(i, Width - (5.0f + strlen("st")), Height + i);
-			OnDrawText((char*)"st", Width - 5.0f, Height + i);
+			OnDrawText(i + 1, Width - (5.0f + strlen("st")), Height + i);
+			switch (i)
+			{
+			case 0:
+				OnDrawText((char*)"st", Width - 5.0f, Height + i);
+				break;
+			case 1:
+				OnDrawText((char*)"nd", Width - 5.0f, Height + i);
+				break;
+			case 2:
+				OnDrawText((char*)"rd", Width - 5.0f, Height + i);
+				break;
+			default:
+				OnDrawText((char*)"th", Width - 5.0f, Height + i);
+				break;
+			}
 			OnDrawText(Ranking[i]->Stage4, Width, Height + i);
 			OnDrawText(Ranking[i]->Name, Width + strlen(", -- - .|                   |  |"), Height + i);
 		}
@@ -809,8 +883,22 @@ void ShowRanking(RecordScore* Ranking[], System* _System)
 
 		for (int i = 0; i < 10; ++i)
 		{
-			OnDrawText(i, Width - (5.0f + strlen("st")), Height + i);
-			OnDrawText((char*)"st", Width - 5.0f, Height + i);
+			OnDrawText(i + 1, Width - (5.0f + strlen("st")), Height + i);
+			switch (i)
+			{
+			case 0:
+				OnDrawText((char*)"st", Width - 5.0f, Height + i);
+				break;
+			case 1:
+				OnDrawText((char*)"nd", Width - 5.0f, Height + i);
+				break;
+			case 2:
+				OnDrawText((char*)"rd", Width - 5.0f, Height + i);
+				break;
+			default:
+				OnDrawText((char*)"th", Width - 5.0f, Height + i);
+				break;
+			}
 			OnDrawText(Ranking[i]->Stage5, Width, Height + i);
 			OnDrawText(Ranking[i]->Name, Width + strlen(",---.|                   ---."), Height + i);
 		}
@@ -820,6 +908,13 @@ void ShowRanking(RecordScore* Ranking[], System* _System)
 	{
 		_System->Scene_State = Scene_Logo;
 		_System->TimeInfo.ShowRanking = 0;
+		_System->StageState = 0;
+		_System->RScore.Total = 0;
+		_System->RScore.Stage1 = 0;
+		_System->RScore.Stage2 = 0;
+		_System->RScore.Stage3 = 0;
+		_System->RScore.Stage4 = 0;
+		_System->RScore.Stage5 = 0;
 	}
 }
 
@@ -829,6 +924,14 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 {
 	StageSet(Player, Enemy, PBullet, Destination, _Direction, EDirection,
 		_System, TimeInfo);
+
+	//연료 소모
+	TimeInfo->UseFuel++;
+	if (TimeInfo->UseFuel > 10)
+	{
+		Player->Fuel--;
+		TimeInfo->UseFuel = 0;
+	}
 
 	// 스페이스바를 눌렀을 때 총알 생성
 	if (!_System->Check && GetAsyncKeyState(VK_SPACE) & 0x0001)
@@ -1149,10 +1252,20 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 			}
 		}
 	}
+
+	if (Player->Fuel <= 0)
+	{
+		Player->HP -= 2;
+		Player->Fuel = 100;
+
+		if(Player->Power>1)
+			Player->Power--;
+	}
+
 	// 스테이지 클리어
 	if (_System->PlayerKill == 0)
 	{
-		StageClear(Player, PBullet, _System);
+		_System->StageNum = 3;
 	}
 	// 게임오버
 	if (Player->HP <= 0)
@@ -1320,10 +1433,13 @@ void ShowPlayStage(Object* Player, System* _System)
 	}
 }
 
-void StageClear(Object* Player, Object* PBullet[], System* _System)
+void StageClear(Object* Player, Object* PBullet[], System* _System, 
+	TimeInfomation* TimeInfo)
 {
 	float Width = GetMidleWidth((char*)" _______  _______  _______  _______  _______    _______  ___      _______  _______  ______    __   __ ");
 	float Height = 20;
+
+	TimeInfo->CountTime++;
 
 	OnDrawText((char*) " _______  _______  _______  _______  _______    _______  ___      _______  _______  ______    __   __ ", Width, Height, 14);
 	OnDrawText((char*) "|       ||       ||   _   ||       ||       |  |       ||   |    |       ||   _   ||    _ |  |  | |  |", Width, Height+1.0f, 14);
@@ -1333,50 +1449,100 @@ void StageClear(Object* Player, Object* PBullet[], System* _System)
 	OnDrawText((char*) " _____| |  |   |  |   _   ||   |_| ||   |___   |     |_ |       ||   |___ |   _   ||   |  | | __   __ ", Width, Height+5.0f, 14);
 	OnDrawText((char*) "|_______|  |___|  |__| |__||_______||_______|  |_______||_______||_______||__| |__||___|  |_||__| |__|", Width, Height+6.0f, 14);
 
+	if (TimeInfo->CountTime > 2)
+		OnDrawText((char*)"Score", Width, Height + 7.0f, 14);
+	if (TimeInfo->CountTime > 5)
+		OnDrawText(_System->Score, Width + 15.0f, Height + 7.0f, 14);
+	if(TimeInfo->CountTime >7)
+		OnDrawText((char*)"--------", Width + 1.0f, Height + 12.0f, 14);
+	if(TimeInfo->CountTime >9)
+		OnDrawText((char*)"Total", Width, Height + 13.0f, 14);
+	if(TimeInfo->CountTime >12)
+		switch (_System->ClearStage)
+		{case 0:
+			OnDrawText(_System->RScore.Stage1, Width + 15.0f, Height + 13.0f, 14);
+			break;
+		case 1:
+			OnDrawText(_System->RScore.Stage2, Width + 15.0f, Height + 13.0f, 14);
+			break;
+		case 2:
+			OnDrawText(_System->RScore.Stage3, Width + 15.0f, Height + 13.0f, 14);
+			break;
+		case 3:
+			OnDrawText(_System->RScore.Stage4, Width + 15.0f, Height + 13.0f, 14);
+			break;
+		case 4:
+			OnDrawText(_System->RScore.Stage5, Width + 15.0f, Height + 13.0f, 14);
+			break;
+		}
 
-	OnDrawText((char*)"kill", Width, Height, 14);
-	OnDrawText(_System->Score, Width + 15.0f, Height, 14);
-	OnDrawText((char*)"Life", Width, Height+1, 14);
-	OnDrawText(Player->HP, Width + 10.0f, Height+1, 14);
-	OnDrawText(Player->HP*10, Width + 15.0f, Height+1, 14);
-	OnDrawText((char*)"%", Width + 18.0f, Height + 1, 14);
-	OnDrawText(Player->Fuel, Width + 10.0f, Height + 2, 14);
-	OnDrawText(Player->Fuel, Width + 15.0f, Height+2, 14);
-	OnDrawText((char*)"%", Width + 18.0f, Height + 2, 14);
+	if (TimeInfo->CountTime > 17)
+		OnDrawText((char*)"Life", Width, Height + 8.0f, 14);
 
-	switch (_System->ClearStage)
+	if (TimeInfo->CountTime > 19)
+		OnDrawText(Player->HP, Width + 10.0f, Height + 8.0f, 14);
+	if (TimeInfo->CountTime > 24)
 	{
-	case 0:
-		_System->Score += _System->Score * (float)((Player->HP / 10)+(Player->Fuel/100));
-		_System->RScore.Stage1 = _System->Score;
-		_System->RScore.Total += _System->Score;
-		break;
-	case 1:
-		_System->Score += _System->Score * (float)((Player->HP / 10) + (Player->Fuel / 100));
-		_System->RScore.Stage2 = _System->Score;
-		_System->RScore.Total += _System->Score;
-		break;
-	case 2:
-		_System->Score += _System->Score * (float)((Player->HP / 10) + (Player->Fuel / 100));
-		_System->RScore.Stage3 = _System->Score;
-		_System->RScore.Total += _System->Score;
-		break;
-	case 3:
-		_System->Score += _System->Score * (float)((Player->HP / 10) + (Player->Fuel / 100));
-		_System->RScore.Stage4 = _System->Score;
-		_System->RScore.Total += _System->Score;
-		break;
-	case 4:
-		_System->Score += _System->Score * (float)((Player->HP / 10) + (Player->Fuel / 100));
-		_System->RScore.Stage5 = _System->Score;
-		_System->RScore.Total += _System->Score;
-		break;
+		OnDrawText(Player->HP * 10, Width + 15.0f, Height + 8.0f, 14);
+		OnDrawText((char*)"%", Width + 18.0f, Height + 8.0f, 14);
+	}
+	
+	if (TimeInfo->CountTime > 26)
+		OnDrawText((char*)"Fuel", Width, Height + 10.0f, 14);
+	if (TimeInfo->CountTime > 28)
+		OnDrawText(Player->Fuel, Width + 10.0f, Height + 10.0f, 14);
+	if (TimeInfo->CountTime > 30)
+	{
+		OnDrawText(Player->Fuel, Width + 15.0f, Height + 10.0f, 14);
+		OnDrawText((char*)"%", Width + 18.0f, Height + 10.0f, 14);
 	}
 
-	++_System->ClearStage;
-	ResetSystem(Player, PBullet, _System);
+	if (TimeInfo->CountTime > 32)
+		OnDrawText((char*)"Power LV", Width, Height + 11.0f, 14);
+	if (TimeInfo->CountTime > 34)
+	OnDrawText(Player->Power, Width+10.0f, Height + 11.0f, 14);
+	if (TimeInfo->CountTime > 36)
+	{
+		OnDrawText(Player->Power * 1000, Width + 15.0f, Height + 11.0f, 14);
 
-	Sleep(2000);
+		switch (_System->ClearStage)
+		{
+		case 0:
+			_System->RScore.Stage1 = CaculationScore(Player, _System, 
+				_System->RScore.Stage1);
+			if(_System->Complete)
+				break;
+		case 1:
+			_System->RScore.Stage2 = CaculationScore(Player, _System,
+				_System->RScore.Stage2);
+			if (_System->Complete)
+				break;
+		case 2:
+			_System->RScore.Stage3 = CaculationScore(Player, _System,
+				_System->RScore.Stage3);
+			if (_System->Complete)
+				break;
+		case 3:
+			_System->RScore.Stage4 = CaculationScore(Player, _System,
+				_System->RScore.Stage4);
+			if (_System->Complete)
+				break;
+		case 4:
+			_System->RScore.Stage5 = CaculationScore(Player, _System,
+				_System->RScore.Stage5);
+			if (_System->Complete)
+				break;
+		}
+
+		if (_System->RScore.Temp <= 0)
+		{
+			Sleep(1500);
+			
+			++_System->ClearStage;
+			TimeInfo->CountTime = 0;
+			ResetSystem(Player, PBullet, _System);
+		}
+	}
 }
 
 void StageSet(Object* Player, Object* Enemy[], Object* PBullet[], 
@@ -1391,6 +1557,7 @@ void StageSet(Object* Player, Object* Enemy[], Object* PBullet[],
 			//_System->PlayerKill = 16;
 			_System->PlayerKill = 1;
 			_System->MaxEnemy = _System->PlayerKill;
+			Player->Fuel = 100;
 			_System->StageNum++;
 		}
 	case 1 :
@@ -1399,6 +1566,7 @@ void StageSet(Object* Player, Object* Enemy[], Object* PBullet[],
 			//_System->PlayerKill = 20;
 			_System->PlayerKill = 1;
 			_System->MaxEnemy = _System->PlayerKill;
+			Player->Fuel = 100;
 			_System->StageNum++;
 		}
 	case 2 :
@@ -1407,6 +1575,7 @@ void StageSet(Object* Player, Object* Enemy[], Object* PBullet[],
 			//_System->PlayerKill = 24;
 			_System->PlayerKill = 1;
 			_System->MaxEnemy = _System->PlayerKill;
+			Player->Fuel = 100;
 			_System->StageNum++;
 		}
 	case 3 :
@@ -1415,6 +1584,7 @@ void StageSet(Object* Player, Object* Enemy[], Object* PBullet[],
 			//_System->PlayerKill = 28;
 			_System->PlayerKill = 1;
 			_System->MaxEnemy = _System->PlayerKill;
+			Player->Fuel = 100;
 			_System->StageNum++;
 		}
 	case 4 :
@@ -1423,6 +1593,7 @@ void StageSet(Object* Player, Object* Enemy[], Object* PBullet[],
 			//_System->PlayerKill = 32;
 			_System->PlayerKill = 1;
 			_System->MaxEnemy = _System->PlayerKill;
+			Player->Fuel = 100;
 			_System->StageNum++;
 		}
 	}
@@ -1588,41 +1759,44 @@ void ChargeAttackBullet(Object* Player , Object * PBullet[], TimeInfomation* _Ti
 {
 	if (Player->Charge.Check)
 	{
-		if (_Time->ChargeAttackTime % 3 == 0)
-		{
-			for (int i = 0; i < 256; ++i)
+		//if (Player->Power < 4)
+		//{
+			if (_Time->ChargeAttackTime % 3 == 0)
 			{
-				if (PBullet[i] == nullptr)
+				for (int i = 0; i < 256; ++i)
 				{
-					PBullet[i] = CreateBullet(Player->Charge.TransInfo.Position.x,
-						Player->Charge.TransInfo.Position.y - 1, 1, 0);
-					for (int j = 0; j < 256; ++j)
+					if (PBullet[i] == nullptr)
 					{
-						if (PBullet[j] == nullptr)
+						PBullet[i] = CreateBullet(Player->Charge.TransInfo.Position.x,
+							Player->Charge.TransInfo.Position.y - 1, 1, 0);
+						for (int j = 0; j < 256; ++j)
 						{
-							PBullet[j] = CreateBullet(Player->Charge.TransInfo.Position.x + 2,
-								Player->Charge.TransInfo.Position.y, 1, 0);
-
-							for (int k = 0; k < 256; ++k)
+							if (PBullet[j] == nullptr)
 							{
-								if (PBullet[k] == nullptr)
-								{
-									PBullet[k] = CreateBullet(Player->Charge.TransInfo.Position.x - 2,
-										Player->Charge.TransInfo.Position.y, 1, 0);
-									break;
-								}
-							}
+								PBullet[j] = CreateBullet(Player->Charge.TransInfo.Position.x + 2,
+									Player->Charge.TransInfo.Position.y, 1, 0);
 
-							break;
+								for (int k = 0; k < 256; ++k)
+								{
+									if (PBullet[k] == nullptr)
+									{
+										PBullet[k] = CreateBullet(Player->Charge.TransInfo.Position.x - 2,
+											Player->Charge.TransInfo.Position.y, 1, 0);
+										break;
+									}
+								}
+								break;
+							}
 						}
+						break;
 					}
-					break;
 				}
 			}
-		}
-		_Time->ChargeAttackTime++;
-		OnDrawText((char*)"‡", Player->Charge.TransInfo.Position.x,
-			Player->Charge.TransInfo.Position.y + 1);
+		//}
+		//else if (Player->Power)
+			_Time->ChargeAttackTime++;
+			OnDrawText((char*)"‡", Player->Charge.TransInfo.Position.x,
+				Player->Charge.TransInfo.Position.y + 1);
 	}
 
 	if (_Time->ChargeAttackTime > 30)
@@ -1631,6 +1805,7 @@ void ChargeAttackBullet(Object* Player , Object * PBullet[], TimeInfomation* _Ti
 		_Time->ChargeAttackTime = 0;
 	}
 }
+
 
 
 bool Collision(Object* ObjectA, Object* ObjectB)
@@ -1658,6 +1833,32 @@ char* SetName()
 	strcpy(pName, Buffer);
 
 	return pName;
+}
+
+int CaculationScore(Object* Player, System* _System, int Score)
+{
+	_System->RScore.Temp = _System->Score + (_System->Score * (float)((Player->HP /10) +
+		(Player->Fuel / 100))) + (Player->Power * 1000);
+
+	if ((_System->RScore.Temp/10000) * 10000 > Score)
+		Score += 10000;
+	else if ((_System->RScore.Temp/1000) * 1000 > Score)
+		Score += 1000;
+	else if ((_System->RScore.Temp/100) * 100 > Score)
+		Score += 100;
+	else if ((_System->RScore.Temp/10) * 10 > Score)
+		Score += 10;
+	else if (_System->RScore.Temp > Score)
+		Score += 1;
+
+	else if(_System->RScore.Temp <= Score)
+	{
+		_System->RScore.Total += _System->RScore.Temp;
+		_System->RScore.Temp = 0;
+		_System->Complete = true;
+	}
+
+	return Score;
 }
 
 float GetMidleWidth(const char* _str)
