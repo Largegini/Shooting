@@ -9,6 +9,8 @@
 // 적 크기, 디자인
 //	****	
 // 플레이어와 적 충돌(무적시간)
+// 적처치시 폭발
+// 플레이어 피격 or 생명력 0이 됬을때 폭발
 //	***
 // 
 //	*
@@ -41,6 +43,9 @@ int main(void)
 	Object* Player = new Object;
 	Initialize(Player, (char*)"▲", 10, 10, 40.0f, 52.0f);
 	Player->Info.Color = 11;
+
+	Object* Boss = new Object;
+	Initialize(Boss, (char*)"⊙", 0, 1000, 40.0f, 10.0f);
 
 	Object* Enemy[32];
 	for (int i = 0; i < 32; ++i)

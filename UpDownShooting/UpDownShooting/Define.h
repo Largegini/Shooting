@@ -1265,7 +1265,16 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 	// 스테이지 클리어
 	if (_System->PlayerKill == 0)
 	{
-		_System->StageNum = 3;
+		if (_System->ClearStage == 4)
+		{
+			Boss(Enemy[0]);
+		}
+
+		else if(Enemy[0]->HP <= 0 )
+			_System->StageNum = 3;
+
+		else
+			_System->StageNum = 3;
 	}
 	// 게임오버
 	if (Player->HP <= 0)
@@ -1806,7 +1815,23 @@ void ChargeAttackBullet(Object* Player , Object * PBullet[], TimeInfomation* _Ti
 	}
 }
 
+void Boss(Object* BossEnemy)
+{
+	float Width = BossEnemy->TransInfo.Position.x - (strlen("    .      .-~|           ")/2);
+	float Height = BossEnemy->TransInfo.Position.y;
 
+	OnDrawText((char*)"    .      .-~|           ", Width, Height - 5.0f); 
+	OnDrawText((char*)"   / `-'|.'    `- :		 ", Width, Height - 4.0f);
+	OnDrawText((char*)"   |    /          `._	 ", Width, Height - 3.0f);
+	OnDrawText((char*)"   |   |   .-.        {	 ", Width, Height - 2.0f);
+	OnDrawText((char*)"    |  |   `-'         `. ", Width, Height - 1.0f);
+	OnDrawText((char*)"     | |                / ", Width, Height);
+	OnDrawText((char*)"~-.`. ||            .-~_	 ", Width, Height + 1.0f);
+	OnDrawText((char*)"    .|-.|       .-~      |", Width, Height + 2.0f);
+	OnDrawText((char*)"     `-'/~~ -.~          /", Width, Height + 3.0f);
+	OnDrawText((char*)"   .-~/|`-._ /~~-.~ -- ~	 ", Width, Height + 4.0f);
+	OnDrawText((char*)"  /  |  |    ~- . _|		 ", Width, Height + 5.0f);
+}
 
 bool Collision(Object* ObjectA, Object* ObjectB)
 {
