@@ -44,6 +44,7 @@ struct Object
 	int HP;
 	int MaxHP;
 	int Fuel;
+	int Phase = 1;
 
 	Information Info;
 	Transform TransInfo;
@@ -77,9 +78,11 @@ struct TimeInfomation
 	int ChargeAttackTime = 0;
 	int UseFuel = 0;
 	int CountTime = 0;
+	int Pattern = 0;
 
 	bool EnemyTime = false;
 	bool EBulletTime = false;
+	bool BossAttack = false;
 };
 
 struct System

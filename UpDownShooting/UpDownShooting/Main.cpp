@@ -25,6 +25,7 @@ int main(void)
 	ULONGLONG Time = GetTickCount64();
 	ULONGLONG EnemyTime = GetTickCount64();
 	ULONGLONG EBulletTime = GetTickCount64();
+	ULONGLONG BossAttTime = GetTickCount64();
 
 	DrawTextInfo CPosition[4];
 
@@ -45,15 +46,16 @@ int main(void)
 	Player->Info.Color = 11;
 
 	Object* Boss = new Object;
-	Initialize(Boss, (char*)"¢Á", 0, 1000, 40.0f, 10.0f);
+	Initialize(Boss, (char*)"¢Á", 1000, 1000, 40.0f, 10.0f);
+	Boss->Info.Option = 1;
 
 	Object* Enemy[32];
 	for (int i = 0; i < 32; ++i)
 		Enemy[i] = nullptr;
 
 	Object* Destination[32];
-		for (int i = 0; i < 32; ++i)
-			Destination[i] = nullptr;
+	for (int i = 0; i < 32; ++i)
+		Destination[i] = nullptr;
 
 	Object* PBullet[256];
 	for (int i = 0; i < 256; ++i)
@@ -64,11 +66,11 @@ int main(void)
 		Item[i] = nullptr;
 
 	Object* Cursor1 = new Object;
-	Initialize(Cursor1, (char*)"¢¸", 0,0,0.0f, 25.0f);
+	Initialize(Cursor1, (char*)"¢¸", 0, 0, 0.0f, 25.0f);
 	Object* Cursor2 = new Object;
-	Initialize(Cursor2, (char*)"¢¸", 0,0,50.0f + (float)strlen("¿¹"), 
+	Initialize(Cursor2, (char*)"¢¸", 0, 0, 50.0f + (float)strlen("¿¹"),
 		27.0f);
-	
+
 	RecordScore* Ranking[10];
 	for (int i = 0; i < 10; ++i)
 	{
@@ -89,7 +91,7 @@ int main(void)
 	{
 		if (Time + 100 < GetTickCount64())
 		{
-			Time  = GetTickCount64();
+			Time = GetTickCount64();
 
 			if (SystemInfo->StageNum > 0)
 			{
@@ -105,10 +107,19 @@ int main(void)
 					TimeInfo->EBulletTime = true;
 				}
 			}
+
+			if (SystemInfo->PlayerKill == 0 && SystemInfo->ClearStage >= 4)
+			{
+				if (BossAttTime + 1000 < GetTickCount64() && !TimeInfo->BossAttack)
+				{
+					BossAttTime = GetTickCount64();
+					TimeInfo->BossAttack = true;
+				}
+			}
 			system("cls");
 
 			SceneManager(CPosition, Cursor1, Cursor2, Player,
-				Enemy, PBullet, Item, Destination, Ranking, Direction,EDirection, SystemInfo, TimeInfo);
+				Enemy, PBullet, Item, Destination, Boss, Ranking, Direction, EDirection, SystemInfo, TimeInfo);
 		}
 	}
 	return 0;
