@@ -5,8 +5,8 @@
 // 
 //	*****
 // 보스
-// 플레이어 디자인
-// 적 크기, 디자인
+// 차지레이저 공격
+// 레이저 명암
 //	****	
 // 플레이어와 적 충돌(무적시간)
 // 적처치시 폭발
@@ -16,9 +16,6 @@
 //	*
 // 위 에서 내려오는 벽
 // 폭탄 공격
-// 차지레이저 공격
-// 레이저 명암
-// 차지공격 (설치형) 그래픽
 
 int main(void)
 {
@@ -42,7 +39,7 @@ int main(void)
 	TimeInfomation* TimeInfo = new TimeInfomation;
 
 	Object* Player = new Object;
-	Initialize(Player, (char*)"▲", 10, 10, 40.0f, 52.0f);
+	Initialize(Player, (char*)"┏┃┓", 10, 10, 40.0f, 52.0f);
 	Player->Info.Color = 11;
 
 	Object* Boss = new Object;
@@ -84,7 +81,7 @@ int main(void)
 
 	HideCursor(false);
 	//테스트용
-	Player->Power = 7;
+	Player->Power = 6;
 	SystemInfo->ClearStage = 4;
 
 	while (true)
@@ -110,10 +107,11 @@ int main(void)
 
 			if (SystemInfo->PlayerKill == 0 && SystemInfo->ClearStage >= 4)
 			{
-				if (BossAttTime + 1000 < GetTickCount64() && !TimeInfo->BossAttack)
+				if (BossAttTime + 1750 + TimeInfo->PaDelay < GetTickCount64() && !TimeInfo->BossAttack)
 				{
 					BossAttTime = GetTickCount64();
 					TimeInfo->BossAttack = true;
+					SystemInfo->RandNum2 = rand() % 2;
 				}
 			}
 			system("cls");

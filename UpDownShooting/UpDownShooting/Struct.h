@@ -22,6 +22,7 @@ struct Transform
 struct Information
 {
 	char* Texture;
+	int ChangeTexture = 0;
 	int Option;
 	int Color;
 	float MoveX = 1.0f;
@@ -45,6 +46,8 @@ struct Object
 	int MaxHP;
 	int Fuel;
 	int Phase = 1;
+
+	bool Damaged = false;
 
 	Information Info;
 	Transform TransInfo;
@@ -79,6 +82,7 @@ struct TimeInfomation
 	int UseFuel = 0;
 	int CountTime = 0;
 	int Pattern = 0;
+	int PaDelay = 0;
 
 	bool EnemyTime = false;
 	bool EBulletTime = false;
@@ -93,6 +97,7 @@ struct System
 	int PlayerKill = 0;
 	int PlayerNameInput = 0;
 	int RandNum = 0;
+	int RandNum2 = 0;
 	int Scene_State = 0;
 	int StageState = 0;
 	int StageNum = 0;
@@ -101,7 +106,7 @@ struct System
 	
 	bool Check = false;
 	bool Complete = false;
+
 	RecordScore RScore;
 	TimeInfomation TimeInfo;
 };
-
