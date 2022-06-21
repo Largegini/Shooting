@@ -1,21 +1,4 @@
 #include "Headers.h"
-// *의 개수는 우선도
-
-// 탑 다운 형식 
-// 
-//	*****
-// 보스
-// 차지레이저 공격
-// 레이저 명암
-//	****	
-// 플레이어와 적 충돌(무적시간)
-// 적처치시 폭발
-// 플레이어 피격 or 생명력 0이 됬을때 폭발
-//	***
-// 
-//	*
-// 위 에서 내려오는 벽
-// 폭탄 공격
 
 int main(void)
 {
@@ -39,7 +22,8 @@ int main(void)
 	TimeInfomation* TimeInfo = new TimeInfomation;
 
 	Object* Player = new Object;
-	Initialize(Player, (char*)"┏┃┓", 10, 10, 40.0f, 52.0f);
+	Initialize(Player, (char*)"┌┃┐", 10, 10, 40.0f, 52.0f);
+	Player->Power = 1;
 	Player->Info.Color = 11;
 
 	Object* Boss = new Object;
@@ -81,7 +65,7 @@ int main(void)
 
 	HideCursor(false);
 	//테스트용
-	Player->Power = 6;
+	Player->Power = 7;
 	SystemInfo->ClearStage = 4;
 
 	while (true)

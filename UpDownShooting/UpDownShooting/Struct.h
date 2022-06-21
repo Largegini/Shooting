@@ -22,9 +22,12 @@ struct Transform
 struct Information
 {
 	char* Texture;
+
+	int BulletCount = 1;
 	int ChangeTexture = 0;
-	int Option;
 	int Color;
+	int Option;
+
 	float MoveX = 1.0f;
 	float MoveY = 1.0f;
 };
@@ -74,19 +77,21 @@ struct RecordScore
 
 struct TimeInfomation
 {
-	int EBHomingTime[128] = { 0 };
-	int Result = 0;
-	int EndTime = 0;
-	int ShowRanking = 0;
 	int ChargeAttackTime = 0;
-	int UseFuel = 0;
 	int CountTime = 0;
+	int EBHomingTime[128] = { 0 };
+	int EndTime = 0;
 	int Pattern = 0;
 	int PaDelay = 0;
+	int Result = 0;
+	int ShowRanking = 0;
+	int SplitTime[128] = { 0 };
+	int UseFuel = 0;
+	int Warning = 0;
 
+	bool BossAttack = false;
 	bool EnemyTime = false;
 	bool EBulletTime = false;
-	bool BossAttack = false;
 };
 
 struct System
