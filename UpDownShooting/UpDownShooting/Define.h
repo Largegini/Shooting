@@ -95,7 +95,7 @@ void SceneManager(DrawTextInfo* CPosition, Object* MenuCursor,
 		exit(NULL);
 		break;
 	case Scene_End:
-		End(Player, PBullet, _Boss,_System, TimeInfo);
+		End(Player, PBullet, _Boss, _System, TimeInfo);
 		break;
 	case Scene_GameOver:
 		GameOver(Player, PBullet, _System);
@@ -1000,7 +1000,7 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 							{
 								if (PBullet[k] == nullptr)
 								{
-									PBullet[k] = CreateBullet(Player->TransInfo.Position.x + (float)(strlen("┏┃┓") / 2)-1.0f,
+									PBullet[k] = CreateBullet(Player->TransInfo.Position.x + (float)(strlen("┏┃┓") / 2) - 1.0f,
 										Player->TransInfo.Position.y, (Player->Power % 3),
 										0);
 									break;
@@ -1027,7 +1027,7 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 		if (Player->Charge.Stack >= 10)
 		{
 			Player->Charge.Check = true;
-			Player->Charge.TransInfo.Position.x = Player->TransInfo.Position.x ;
+			Player->Charge.TransInfo.Position.x = Player->TransInfo.Position.x;
 			Player->Charge.TransInfo.Position.y = Player->TransInfo.Position.y - 1;
 			Player->Info.Color = 11;
 		}
@@ -1068,7 +1068,7 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 	OnDrawText(Player->Info.Texture, Player->TransInfo.Position.x,
 		Player->TransInfo.Position.y, Player->Info.Color);
 	OnDrawText((char*)"└┃┘", Player->TransInfo.Position.x,
-		Player->TransInfo.Position.y+1.0f, Player->Info.Color);
+		Player->TransInfo.Position.y + 1.0f, Player->Info.Color);
 
 	// 적 출력
 	for (int i = 0; i < 32; ++i)
@@ -1093,7 +1093,7 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 					Enemy[i]->TransInfo.Position.y, Enemy[i]->Info.Color);
 				Enemy[i]->Info.ChangeTexture++;
 
-				if(Enemy[i]->Info.ChangeTexture >= 5)
+				if (Enemy[i]->Info.ChangeTexture >= 5)
 					Enemy[i]->Info.ChangeTexture = 0;
 			}
 		}
@@ -1189,14 +1189,14 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 						PBullet[i]->TransInfo.Position.x -= 2.0f;
 						PBullet[i]->TransInfo.Position.y += 1.0f;
 						break;
-					case 7 :
+					case 7:
 						PBullet[i]->TransInfo.Position.x -= 2.0f;
 						break;
-					case 8 :
+					case 8:
 						PBullet[i]->TransInfo.Position.x -= 2.0f;
 						PBullet[i]->TransInfo.Position.y -= 1.0f;
 						break;
-					default :
+					default:
 						break;
 					}
 					OnDrawText(PBullet[i]->Info.Texture,
@@ -1206,7 +1206,7 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 				}
 				break;
 			}
-			default :
+			default:
 				break;
 			}
 		}
@@ -1260,34 +1260,7 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 			}
 		}
 	}
-	// 플레이어의 총알이 적에게 적중 했을 때 확률적으로 아이템 생성
-	for (int i = 0; i < 256; ++i)
-	{
-		if (PBullet[i] != nullptr)
-		{
-			for (int j = 0; j < 32; ++j)
-			{
-				if (Enemy[j] != nullptr)
-				{
-					if (Enemy[j]->HP <= 0)
-					{
-						if (Enemy[j]->Info.Option < 30 &&
-							Collision(PBullet[i], Enemy[j]))
-						{
-							for (int k = 0; k < 16; ++k)
-							{
-								if (Item[k] == nullptr)
-									Item[k] = CreateItem(Enemy[j]->TransInfo.Position.x,
-										Enemy[j]->TransInfo.Position.y);
-							}
-
-						}
-					}
-				}
-			}
-		}
-
-	}
+	
 	// 플레이어의 총알이 적에게 적중 했을 때 적 삭제와 추가점수 획득
 	for (int i = 0; i < 256; ++i)
 	{
@@ -1297,24 +1270,41 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 			{
 				if (Enemy[j] != nullptr)
 				{
-					if (PBullet[i]->Info.Option == 0 ||
-						PBullet[i]->Info.Option >= 10)
+					if (PBullet[i]->Info.Option == 0)
 					{
 						if (Collision(PBullet[i], Enemy[j]))
 						{
 							Enemy[j]->HP -= PBullet[i]->Power;
 
-							if (PBullet[i]->Info.Option < 10)
-							{
 								delete PBullet[i];
 								PBullet[i] = nullptr;
-							}
 
-							else if (PBullet[i]->Info.Option >= 10 && TimeInfo->ChargeAttackTime >= 30)
+							if (Enemy[j]->HP <= 0)
 							{
-								delete PBullet[i];
-								PBullet[i] = nullptr;
+								for (int k = 0; k < 16; ++k)
+								{
+									if (Item[k] == nullptr)
+									{
+										Item[k] = CreateItem(Enemy[j]->TransInfo.Position.x,
+											Enemy[j]->TransInfo.Position.y);
+										break;
+									}
+								}
+								delete Enemy[j];
+								Enemy[j] = nullptr;
+
+								_System->PlayerKill--;
+								_System->Score += 10;
 							}
+							break;
+						}
+					}
+
+					else if (PBullet[i]->Info.Option >= 10)
+					{
+						if (Collision(PBullet[i], Enemy[j]))
+						{
+							Enemy[j]->HP -= PBullet[i]->Power;
 
 							if (Enemy[j]->HP <= 0)
 							{
@@ -1324,6 +1314,13 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 								_System->PlayerKill--;
 								_System->Score += 10;
 							}
+						}
+
+						if (TimeInfo->ChargeAttackTime >= 30)
+						{
+							delete PBullet[i];
+							PBullet[i] = nullptr;
+							break;
 						}
 					}
 				}
@@ -1347,7 +1344,7 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 								PBullet[i]->TransInfo.Position.y,
 								PBullet[i]->Info.BulletCount, 3);
 							PBullet[i]->Info.BulletCount++;
-							if (PBullet[i]->Info.BulletCount>8)
+							if (PBullet[i]->Info.BulletCount > 8)
 								break;
 						}
 					}
@@ -1357,7 +1354,6 @@ void PlayStage(Object* Player, Object* Enemy[], Object* PBullet[],
 					TimeInfo->SplitTime[i] = 0;
 					break;
 				}
-				
 			}
 		}
 	}
@@ -1709,38 +1705,38 @@ void StageSet(Object* Player, Object* Enemy[], Object* PBullet[],
 	case 0:
 		if (_System->StageNum == 1)
 		{
-			//_System->PlayerKill = 16;
-			_System->PlayerKill = 1;
+			_System->PlayerKill = 16;
 			_System->MaxEnemy = _System->PlayerKill;
 			Player->Fuel = 100;
 			_System->StageNum++;
+			_System->EnemyCount = 0;
 		}
 	case 1:
 		if (_System->StageNum == 1)
 		{
-			//_System->PlayerKill = 20;
-			_System->PlayerKill = 1;
+			_System->PlayerKill = 20;
 			_System->MaxEnemy = _System->PlayerKill;
 			Player->Fuel = 100;
 			_System->StageNum++;
+			_System->EnemyCount = 0;
 		}
 	case 2:
 		if (_System->StageNum == 1)
 		{
-			//_System->PlayerKill = 24;
-			_System->PlayerKill = 1;
+			_System->PlayerKill = 24;
 			_System->MaxEnemy = _System->PlayerKill;
 			Player->Fuel = 100;
 			_System->StageNum++;
+			_System->EnemyCount = 0;
 		}
 	case 3:
 		if (_System->StageNum == 1)
 		{
-			//_System->PlayerKill = 28;
-			_System->PlayerKill = 1;
+			_System->PlayerKill = 28;
 			_System->MaxEnemy = _System->PlayerKill;
 			Player->Fuel = 100;
 			_System->StageNum++;
+			_System->EnemyCount = 0;
 		}
 	case 4:
 		if (_System->StageNum == 1)
@@ -1750,6 +1746,7 @@ void StageSet(Object* Player, Object* Enemy[], Object* PBullet[],
 			_System->MaxEnemy = _System->PlayerKill;
 			Player->Fuel = 100;
 			_System->StageNum++;
+			_System->EnemyCount = 0;
 		}
 	}
 	//	적 생성
@@ -1864,7 +1861,7 @@ void Initialize(Object* _Object, char* _Texture, const int _MaxHP,
 	const int _HP, const float _PosX, const float _PosY, const float _PosZ)
 {
 	_Object->Info.Texture = (_Texture == nullptr) ? SetName() : _Texture;
-	
+
 	_Object->MaxHP = _MaxHP;
 	_Object->HP = _HP;
 	_Object->Fuel = 100;
@@ -1960,7 +1957,7 @@ void ChargeAttackBullet(Object* Player, Object* PBullet[], TimeInfomation* _Time
 							Player->Charge.TransInfo.Position.y - i, 15);
 						OnDrawText((char*)"∥", Player->Charge.TransInfo.Position.x,
 							Player->Charge.TransInfo.Position.y - i, 15);
-						OnDrawText((char*)"┃", Player->Charge.TransInfo.Position.x - 2.0f, 
+						OnDrawText((char*)"┃", Player->Charge.TransInfo.Position.x - 2.0f,
 							Player->Charge.TransInfo.Position.y - i, 15);
 					}
 
@@ -1977,11 +1974,11 @@ void ChargeAttackBullet(Object* Player, Object* PBullet[], TimeInfomation* _Time
 				{
 					if (Player->Charge.TransInfo.Position.y - i > 1.0f)
 					{
-						OnDrawText((char*)"┃", Player->Charge.TransInfo.Position.x + 2.0f, 
+						OnDrawText((char*)"┃", Player->Charge.TransInfo.Position.x + 2.0f,
 							Player->Charge.TransInfo.Position.y - i, 7);
-						OnDrawText((char*)"∥", Player->Charge.TransInfo.Position.x, 
+						OnDrawText((char*)"∥", Player->Charge.TransInfo.Position.x,
 							Player->Charge.TransInfo.Position.y - i, 7);
-						OnDrawText((char*)"┃", Player->Charge.TransInfo.Position.x - 2.0f, 
+						OnDrawText((char*)"┃", Player->Charge.TransInfo.Position.x - 2.0f,
 							Player->Charge.TransInfo.Position.y - i, 7);
 					}
 
@@ -2111,10 +2108,10 @@ void ChargeAttackBullet(Object* Player, Object* PBullet[], TimeInfomation* _Time
 				}
 			}
 		}
-	
+
 
 		_Time->ChargeAttackTime++;
-		OnDrawText((char*)"┴○┴", Player->Charge.TransInfo.Position.x-(strlen("┴○┴")/2)+1.0f,
+		OnDrawText((char*)"┴○┴", Player->Charge.TransInfo.Position.x - (strlen("┴○┴") / 2) + 1.0f,
 			Player->Charge.TransInfo.Position.y + 1.0f);
 	}
 
@@ -2386,7 +2383,7 @@ bool Collision(Object* ObjectA, Object* ObjectB)
 {
 	if (ObjectA->Info.Option >= 10)
 	{
-		if (ObjectA->TransInfo.Position.y  > ObjectB->TransInfo.Position.y &&
+		if (ObjectA->TransInfo.Position.y > ObjectB->TransInfo.Position.y &&
 			(ObjectA->TransInfo.Position.x + ObjectA->TransInfo.Scale.x) >=
 			ObjectB->TransInfo.Position.x &&
 			(ObjectB->TransInfo.Position.x + ObjectB->TransInfo.Scale.x >=
@@ -2518,7 +2515,7 @@ Object* CreateBullet(const float _x, const float _y, const int _Power,
 		_Object->Power = 3;
 		break;
 
-		
+
 	}
 
 	if (Option == 1)
@@ -2602,7 +2599,7 @@ Object* CreateEnemy(const float _x, const float _y)
 		_Object->Info.Color = 3;
 		break;
 	case 2:
-		_Object->HP = 8;
+		_Object->HP = 7;
 		_Object->Info.Color = 4;
 		break;
 	}
@@ -2687,7 +2684,7 @@ void ShowUI(Object* Player, System* _System)
 {
 	float Width = 95.0f - (float)strlen("Score:");
 
-	if(Player->Damaged)
+	if (Player->Damaged)
 	{
 		Width -= 3.0f;
 		Player->Damaged = false;

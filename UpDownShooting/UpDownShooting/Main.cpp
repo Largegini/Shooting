@@ -65,9 +65,9 @@ int main(void)
 
 	HideCursor(false);
 	//테스트용
-	Player->Power = 7;
 	SystemInfo->ClearStage = 4;
-
+	Player->Power = 7;
+	
 	while (true)
 	{
 		if (Time + 100 < GetTickCount64())
